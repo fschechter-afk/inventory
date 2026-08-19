@@ -33,9 +33,14 @@ npm run build      # production build in dist/
 ## Deploy (one-time setup)
 
 1. In this repo on GitHub: **Settings → Pages → Source: GitHub Actions**.
-2. Push to `main` (or trigger the *Deploy to GitHub Pages* workflow manually).
-3. The app appears at `https://<user>.github.io/inventory/`. Open it on a
-   phone and "Add to Home Screen" to install it.
+2. Re-run the *Deploy to GitHub Pages* workflow (Actions tab → latest run →
+   **Re-run all jobs**), or just push again.
+3. The app appears at `https://fschechter-afk.github.io/inventory/`. Open it
+   on a phone and "Add to Home Screen" to install it.
+
+> Until step 1 is done, the workflow's **build** job passes but **deploy**
+> fails with `Failed to create deployment (status: 404) … Ensure GitHub Pages
+> has been enabled`. That's expected — enabling Pages fixes it.
 
 ## Database
 
