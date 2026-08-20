@@ -6,6 +6,7 @@ import LogView from './components/LogView.jsx'
 import ShoppingList from './components/ShoppingList.jsx'
 import History from './components/History.jsx'
 import FinalStep from './components/FinalStep.jsx'
+import Spending from './components/Spending.jsx'
 
 const todayLine = new Date().toLocaleDateString(undefined, {
   weekday: 'long',
@@ -139,6 +140,12 @@ export default function App() {
             Shopping List
           </button>
           <button
+            className={`tab ${tab === 'spending' ? 'active' : ''}`}
+            onClick={() => setTab('spending')}
+          >
+            Spending
+          </button>
+          <button
             className={`tab ${tab === 'history' ? 'active' : ''}`}
             onClick={() => setTab('history')}
           >
@@ -166,6 +173,9 @@ export default function App() {
       )}
 
       {tab === 'restock' && <ShoppingList catalog={catalog} onToast={showToast} />}
+      {tab === 'spending' && (
+        <Spending filledBy={filledBy} onToast={showToast} onQueued={() => setPending(outboxCount())} />
+      )}
       {tab === 'history' && <History />}
 
       {finalOpen && (

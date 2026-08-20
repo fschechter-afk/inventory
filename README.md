@@ -5,6 +5,11 @@ item list (everything defaults to OK), flag what's **low** or **out**, and
 submit. The latest check becomes a copyable **Shopping List**, and every
 submission is kept in **History** — all stored in Supabase.
 
+It also replaces the Google Form counselors used to log dorm purchases: the
+**Spending** tab is a short form (date, amount, category, optional
+store/note, optional receipt photo) — no receipt scanning or AI, the photo
+is just attached as proof — plus a running list of what's been logged.
+
 This replaces the original single-file `lghsinventory_2.html` prototype with
 a structure that's maintainable and doesn't silently break:
 
@@ -52,6 +57,11 @@ Everything lives in the Supabase project `aheiyytqvzxkoowykkgt`
 | `inventory_items` | The item catalog: category, name, Food Program flag, ordering, `active` toggle |
 | `inventory_checks` | One row per submitted check (who, when, video links, low/out counts) |
 | `inventory_check_items` | Per-item status rows for each check (`ok` / `low` / `out`, qty when low) |
+| `spending_categories` | The spending category list, dashboard-editable like the item catalog |
+| `spending_entries` | One row per logged purchase (who, date, category, amount, vendor/note, receipt photo URL) |
+
+Receipt photos go in the `receipts` Storage bucket (public — the URL is just
+attached to the entry as proof, nothing reads or parses the image).
 
 ### Editing the item list
 
@@ -63,6 +73,13 @@ Supabase Dashboard → Table Editor → `inventory_items`:
   its name either way).
 - **Rename**: edit `name`; past checks keep the name that was current when
   they were submitted.
+
+### Editing spending categories
+
+Supabase Dashboard → Table Editor → `spending_categories`: add a row, set
+`active` to `false` to retire one (past entries keep their category name),
+or edit `sort_order` to reorder the dropdown. Same no-redeploy pattern as
+the item catalog.
 
 ### Changing the Supabase project
 
