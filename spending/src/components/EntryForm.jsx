@@ -1,20 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import {
-  fetchSpendingCategories,
-  fetchSpendingHistory,
-  submitSpendingEntry,
-  uploadReceipt,
-} from '../supabase.js'
-import { queueSpending } from '../outbox.js'
+import { fetchSpendingHistory } from '../supabase.js'
 
 const today = () => new Date().toISOString().slice(0, 10)
 
-export default function Spending({ filledBy, onToast, onQueued }) {
-  const [categories, setCategories] = useState(null)
-  const [categoriesError, setCategoriesError] = useState(null)
+export default function EntryForm({ categories, submitting, onSubmit }) {
   const [entries, setEntries] = useState(undefined)
   const [entriesError, setEntriesError] = useState(null)
-  const [submitting, setSubmitting] = useState(false)
 
   const [spentOn, setSpentOn] = useState(today())
   const [category, setCategory] = useState('')
@@ -33,12 +24,10 @@ export default function Spending({ filledBy, onToast, onQueued }) {
   }, [])
 
   useEffect(() => {
-    fetchSpendingCategories()
-      .then((cats) => {
-        setCategories(cats)
-        setCategory((c) => c || cats[0]?.name || '')
-      })
-      .catch((e) => setCategoriesError(e.message || String(e)))
+    if (categories?.length) setCategory((c) => c || categories[0].name)
+  }, [categories])
+
+  useEffect(() => {
     loadEntries()
   }, [loadEntries])
 
@@ -55,43 +44,10 @@ export default function Spending({ filledBy, onToast, onQueued }) {
     e.preventDefault()
     const amt = parseFloat(amount)
     if (!category || !amt || amt <= 0) return
-
-    setSubmitting(true)
-    const base = { filledBy, spentOn, category, amount: amt, vendor: vendor.trim(), note: note.trim() }
-    let receiptUrl = null
-    let photoFailed = false
-
-    try {
-      if (receiptFile) {
-        try {
-          receiptUrl = await uploadReceipt(receiptFile)
-        } catch {
-          photoFailed = true // still log the expense — just without the photo
-        }
-      }
-      await submitSpendingEntry({ ...base, receiptUrl })
-      onToast(photoFailed ? 'Logged — but the photo failed to upload' : 'Expense logged!')
-      resetForm()
-      loadEntries()
-    } catch (err) {
-      if (navigator.onLine === false || /fetch|network/i.test(err.message || '')) {
-        queueSpending({ ...base, receiptUrl: null })
-        onQueued?.()
-        onToast(
-          receiptFile
-            ? 'No connection — saved without the photo, will send automatically'
-            : 'No connection — saved on this device, will send automatically'
-        )
-        resetForm()
-      } else {
-        console.error('Spending submit failed:', err)
-        onToast('Something went wrong — try again')
-      }
-    }
-    setSubmitting(false)
+    await onSubmit({ spentOn, category, amount: amt, vendor: vendor.trim(), note: note.trim(), receiptFile })
+    resetForm()
+    loadEntries()
   }
-
-  const total = (entries || []).reduce((sum, e) => sum + Number(e.amount), 0)
 
   return (
     <div className="list-view">
@@ -131,24 +87,20 @@ export default function Spending({ filledBy, onToast, onQueued }) {
         <label className="field-label" htmlFor="category">
           Category
         </label>
-        {categoriesError ? (
-          <div className="rl-meta">Couldn&apos;t load categories: {categoriesError}</div>
-        ) : (
-          <select
-            id="category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            required
-            disabled={!categories}
-          >
-            {!categories && <option>Loading…</option>}
-            {categories?.map((c) => (
-              <option key={c.id} value={c.name}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        )}
+        <select
+          id="category"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          required
+          disabled={!categories}
+        >
+          {!categories && <option>Loading…</option>}
+          {categories?.map((c) => (
+            <option key={c.id} value={c.name}>
+              {c.name}
+            </option>
+          ))}
+        </select>
 
         <label className="field-label" htmlFor="vendor">
           Store / vendor (optional)
@@ -189,12 +141,9 @@ export default function Spending({ filledBy, onToast, onQueued }) {
         </button>
       </form>
 
-      <div className="rl-meta spend-total">
-        {entries === undefined
-          ? 'Loading recent expenses…'
-          : `Last ${entries.length} expense${entries.length === 1 ? '' : 's'} — $${total.toFixed(2)} total`}
-      </div>
+      <div className="rl-meta">Recent entries (all counselors)</div>
       {entriesError && <div className="rl-meta">{entriesError}</div>}
+      {entries === undefined && !entriesError && <div className="rl-meta">Loading…</div>}
       {entries?.length === 0 && <div className="rl-empty">No expenses logged yet.</div>}
 
       {entries?.map((entry) => {

@@ -334,21 +334,36 @@ footer.submit-bar {
   margin-bottom: 8px;
   border: 1px solid var(--line);
 }
-.hist-entry .hist-top {
+.hist-top {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  gap: 8px;
 }
-.hist-entry .hist-name { font-weight: 600; font-size: 0.88rem; color: var(--plum); }
-.hist-entry .hist-date { font-size: 0.72rem; color: var(--muted); }
+.hist-name { font-weight: 600; font-size: 0.88rem; color: var(--plum); }
+.hist-date { font-size: 0.72rem; color: var(--muted); }
 .hist-entry .hist-counts { margin-top: 6px; display: flex; gap: 8px; align-items: center; }
-.hist-entry .hist-links { margin-top: 6px; font-size: 0.75rem; display: flex; justify-content: space-between; }
-.hist-entry .hist-links a { color: var(--plum); margin-right: 10px; }
+.hist-links { margin-top: 6px; font-size: 0.75rem; display: flex; justify-content: space-between; }
+.hist-links a { color: var(--plum); margin-right: 10px; }
 
-/* Spending tab */
-.spend-form { margin-bottom: 22px; }
-.spend-row { display: flex; gap: 10px; }
-.spend-row > div { flex: 1; }
+/* Spending report (reconciliation sheet) */
 .spend-amount { font-size: 0.95rem; font-weight: 600; color: var(--ink); margin-top: 4px; }
 .spend-note { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
 .spend-total { font-weight: 600; }
+.spend-filters { display: flex; gap: 10px; margin-top: 8px; }
+.spend-filters select { margin-bottom: 10px; }
+.report-actions { display: flex; gap: 8px; margin-bottom: 14px; }
+.report-actions .copy-btn { margin: 0; }
+.report-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--line);
+}
+.report-row.verified { border-left: 4px solid var(--ok); background: var(--ok-bg); }
+.report-row input[type='checkbox'] { width: 20px; height: 20px; margin-top: 3px; flex-shrink: 0; }
+.report-row-body { flex: 1; min-width: 0; }

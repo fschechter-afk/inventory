@@ -4,7 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "vite",
+    "dev:spending": "vite --config spending/vite.config.js",
     "build": "vite build",
+    "build:spending": "vite build --config spending/vite.config.js",
+    "build:all": "npm run build && npm run build:spending",
     "preview": "vite preview"
   },
   "dependencies": {

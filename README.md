@@ -1,14 +1,24 @@
 # LGHS Dorm Inventory
 
-Weekly dorm pantry inventory checks as an installable PWA. Tap through the
-item list (everything defaults to OK), flag what's **low** or **out**, and
-submit. The latest check becomes a copyable **Shopping List**, and every
-submission is kept in **History** — all stored in Supabase.
+Two small installable PWAs for dorm staff, sharing one Supabase backend:
 
-It also replaces the Google Form counselors used to log dorm purchases: the
-**Spending** tab is a short form (date, amount, category, optional
-store/note, optional receipt photo) — no receipt scanning or AI, the photo
-is just attached as proof — plus a running list of what's been logged.
+- **Inventory** (this directory, deployed at the repo root) — weekly dorm
+  pantry inventory checks, for senior staff. Tap through the item list
+  (everything defaults to OK), flag what's **low** or **out**, and submit.
+  The latest check becomes a copyable **Shopping List**, every submission
+  is kept in **History**, and the **Spending Report** tab is the credit-card
+  reconciliation sheet (see below).
+- **Spending** ([`spending/`](spending)) — the counselor-facing app that
+  replaces the Google Form for logging dorm purchases. A short form (date,
+  amount, category, optional store/note, optional receipt photo — no
+  scanning or AI, the photo is just attached as proof) plus a feed of
+  what's been logged.
+
+They're separate apps on purpose: senior staff only need Inventory, and
+counselors only need Spending — each installs to the home screen as its own
+icon, so nobody has to dig through tabs meant for someone else's job.
+Senior staff reviewing spending use the **Spending Report** tab inside
+Inventory, which reads the same `spending_entries` counselors write to.
 
 This replaces the original single-file `lghsinventory_2.html` prototype with
 a structure that's maintainable and doesn't silently break:
@@ -31,17 +41,25 @@ a structure that's maintainable and doesn't silently break:
 
 ```bash
 npm install
-npm run dev        # local development
-npm run build      # production build in dist/
+npm run dev             # Inventory, local dev
+npm run dev:spending    # Spending, local dev
+npm run build:all       # production build: dist/ (Inventory) + dist/spending/ (Spending)
 ```
+
+`npm run build` alone (Inventory only) empties the whole `dist/` folder,
+including a `dist/spending` from a previous build — use `build:all` (what
+CI runs) when you want both, or rebuild spending after with
+`npm run build:spending`.
 
 ## Deploy (one-time setup)
 
 1. In this repo on GitHub: **Settings → Pages → Source: GitHub Actions**.
 2. Re-run the *Deploy to GitHub Pages* workflow (Actions tab → latest run →
    **Re-run all jobs**), or just push again.
-3. The app appears at `https://fschechter-afk.github.io/inventory/`. Open it
-   on a phone and "Add to Home Screen" to install it.
+3. Inventory appears at `https://fschechter-afk.github.io/inventory/`,
+   Spending at `https://fschechter-afk.github.io/inventory/spending/`. Open
+   each on the right phones and "Add to Home Screen" — they install as two
+   separate apps/icons.
 
 > Until step 1 is done, the workflow's **build** job passes but **deploy**
 > fails with `Failed to create deployment (status: 404) … Ensure GitHub Pages
@@ -58,10 +76,23 @@ Everything lives in the Supabase project `aheiyytqvzxkoowykkgt`
 | `inventory_checks` | One row per submitted check (who, when, video links, low/out counts) |
 | `inventory_check_items` | Per-item status rows for each check (`ok` / `low` / `out`, qty when low) |
 | `spending_categories` | The spending category list, dashboard-editable like the item catalog |
-| `spending_entries` | One row per logged purchase (who, date, category, amount, vendor/note, receipt photo URL) |
+| `spending_entries` | One row per logged purchase (who, date, category, amount, vendor/note, receipt URL, `verified`) |
 
 Receipt photos go in the `receipts` Storage bucket (public — the URL is just
 attached to the entry as proof, nothing reads or parses the image).
+
+### The reconciliation sheet
+
+The **Spending Report** tab in Inventory is where someone checks logged
+purchases against the credit card statement: filter by month and category,
+tick each entry off as **verified** once it matches a line on the
+statement, and use **Copy for Sheets** (paste straight into a spreadsheet)
+or **Download CSV** to work from the whole list at once.
+
+Ticking the checkbox is the only write this app makes to `spending_entries`
+— it goes through the `set_spending_verified` database function rather
+than a direct update, so a client can flip that flag but never rewrite an
+amount or category.
 
 ### Editing the item list
 
@@ -83,12 +114,14 @@ the item catalog.
 
 ### Changing the Supabase project
 
-`src/config.js` holds the URL and publishable key (overridable with
-`VITE_SUPABASE_URL` / `VITE_SUPABASE_KEY` at build time).
+Both apps point at the same project — `src/config.js` (Inventory) and
+`spending/src/config.js` (Spending) each hold the URL and publishable key
+(overridable with `VITE_SUPABASE_URL` / `VITE_SUPABASE_KEY` at build time;
+keep them in sync if you change one).
 
 The schema and the starting item list are checked in under
 [`supabase/migrations/`](supabase/migrations), so a fresh project can be
-rebuilt by running those two files in the SQL Editor, in order. The seed is
+rebuilt by running those files in the SQL Editor, in order. The seed is
 idempotent — re-running it won't duplicate or overwrite dashboard edits.
 
 ## Notes

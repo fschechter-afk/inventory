@@ -1,8 +1,8 @@
-import { submitCheck } from './supabase.js'
+import { submitSpendingEntry } from './supabase.js'
 
-// Offline outbox: checks submitted without a connection wait in localStorage
+// Offline outbox: entries logged without a connection wait in localStorage
 // and are re-sent the next time the app is online.
-const OUTBOX_KEY = 'dormInventory.outbox.v1'
+const OUTBOX_KEY = 'dormSpending.outbox.v1'
 
 function read() {
   try {
@@ -20,7 +20,7 @@ export function outboxCount() {
   return read().length
 }
 
-export function queueCheck(payload) {
+export function queueEntry(payload) {
   const list = read()
   list.push({ ...payload, queuedAt: new Date().toISOString() })
   write(list)
@@ -32,7 +32,7 @@ export async function flushOutbox() {
   let sent = 0
   while (list.length) {
     try {
-      await submitCheck(list[0])
+      await submitSpendingEntry(list[0])
       list = list.slice(1)
       write(list)
       sent++
