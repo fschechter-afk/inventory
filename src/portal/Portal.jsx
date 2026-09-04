@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { fetchSites, groupSitesByCategory, logPurchase } from './api.js'
+import { parseReceipt } from './receipt.js'
 import { flushOutbox, outboxCount, queuePurchase } from '../outbox.js'
 import { money } from './format.js'
 import NameGate from './components/NameGate.jsx'
@@ -38,6 +39,15 @@ function clearTrip() {
   localStorage.removeItem(TRIP_KEY)
 }
 
+/** An installed portal registers as a share target, so a confirmation email
+ *  can be shared straight into it. The text arrives as query parameters. */
+function readSharedText() {
+  const p = new URLSearchParams(window.location.search)
+  return [p.get('share_title'), p.get('share_text'), p.get('share_url')]
+    .filter(Boolean)
+    .join('\n')
+}
+
 const todayLine = new Date().toLocaleDateString(undefined, {
   weekday: 'long',
   month: 'long',
@@ -54,6 +64,7 @@ export default function Portal() {
   const [saving, setSaving] = useState(false)
   const [pending, setPending] = useState(() => outboxCount('purchase'))
   const [reloadKey, setReloadKey] = useState(0)
+  const [sharedText, setSharedText] = useState(readSharedText)
   const [toast, setToast] = useState('')
   const toastTimer = useRef(null)
 
@@ -108,6 +119,16 @@ export default function Portal() {
       window.removeEventListener('focus', check)
     }
   }, [name])
+
+  // A shared receipt opens the form with the store, total and date already
+  // read out of it. Waits for the store list so the store can be matched.
+  useEffect(() => {
+    if (!sharedText) return
+    window.history.replaceState({}, '', window.location.pathname)
+    if (!name || (sites === null && !sitesError)) return
+    setLogging({ site: null, returning: false, prefill: parseReceipt(sharedText, sites || []) })
+    setSharedText('')
+  }, [sharedText, name, sites, sitesError])
 
   const categories = useMemo(() => (sites ? groupSitesByCategory(sites) : []), [sites])
 
@@ -242,6 +263,7 @@ export default function Portal() {
           orderedBy={name}
           sites={sites || []}
           defaultSite={logging.site}
+          prefill={logging.prefill}
           returning={logging.returning}
           saving={saving}
           onSave={handleSave}

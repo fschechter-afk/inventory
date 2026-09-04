@@ -8,7 +8,26 @@
   "background_color": "#F5F1E8",
   "theme_color": "#3D1F3D",
   "icons": [
-    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "./icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
-  ]
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "share_target": {
+    "action": "./",
+    "method": "GET",
+    "params": {
+      "title": "share_title",
+      "text": "share_text",
+      "url": "share_url"
+    }
+  }
 }
