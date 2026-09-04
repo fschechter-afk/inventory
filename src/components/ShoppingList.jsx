@@ -87,9 +87,14 @@ export default function ShoppingList({ catalog, onToast }) {
         <div className="rl-empty">Nothing flagged — everything was OK at last check.</div>
       ) : (
         <>
-          <button className="copy-btn" onClick={copyList}>
-            Copy List
-          </button>
+          <div className="list-actions">
+            <a className="order-link" href="./portal/">
+              Order these →
+            </a>
+            <button className="copy-btn" onClick={copyList}>
+              Copy List
+            </button>
+          </div>
           {grouped.map((cat) => (
             <div key={cat.name}>
               <div className="rl-category-title">{cat.name}</div>

@@ -309,6 +309,29 @@ footer.submit-bar {
   color: var(--low);
 }
 .rl-item.out .rl-flag { color: var(--out); }
+.list-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.list-actions .copy-btn { margin: 0; }
+.order-link {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--plum);
+  text-decoration: none;
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 1px;
+}
+.start-order-link {
+  display: inline-block;
+  margin-top: 18px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  border-bottom-width: 1px;
+}
 .copy-btn {
   display: block;
   margin: 0 0 14px auto;

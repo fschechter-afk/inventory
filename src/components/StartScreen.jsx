@@ -53,6 +53,9 @@ export default function StartScreen({
         <button className="submit-btn" disabled={!catalogReady || !name.trim()} onClick={begin}>
           Begin Inventory Check
         </button>
+        <a className="order-link start-order-link" href="./portal/">
+          Ordering something for the school? Open the portal →
+        </a>
       </div>
     </div>
   )

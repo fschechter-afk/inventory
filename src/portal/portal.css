@@ -1,0 +1,382 @@
+/* Ordering portal — builds on the inventory app's palette in styles.css. */
+
+.portal-view {
+  padding: 12px 12px 60px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+  font-size: inherit;
+  color: inherit;
+  text-decoration: underline;
+  opacity: 0.85;
+  cursor: pointer;
+}
+
+.gate-blurb {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--muted);
+  text-align: left;
+  margin: 0 0 18px;
+}
+.gate-note {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 10px;
+}
+
+/* Store tiles */
+.site-cat {
+  margin-top: 18px;
+}
+.site-cat h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  color: var(--plum);
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 5px;
+  margin: 0 0 10px;
+}
+.site-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+.site-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--gold);
+  border-radius: 10px;
+  padding: 12px 12px 13px;
+  font-family: 'Poppins', sans-serif;
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.site-tile:active {
+  transform: scale(0.985);
+  box-shadow: 0 2px 10px rgba(61, 31, 61, 0.12);
+}
+.site-emoji {
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+.site-name {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--plum);
+}
+.site-blurb {
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.ghost-btn {
+  display: block;
+  width: 100%;
+  margin-top: 18px;
+  background: none;
+  border: 1.5px dashed var(--line);
+  color: var(--plum);
+  border-radius: 10px;
+  padding: 12px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.portal-foot {
+  font-size: 0.74rem;
+  color: var(--muted);
+  line-height: 1.5;
+  text-align: center;
+  margin: 18px 4px 0;
+}
+
+/* What the last inventory check flagged */
+.needs {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.needs-head {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: none;
+  border: none;
+  padding: 12px 14px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.85rem;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+.needs-chip {
+  margin-left: 8px;
+}
+.needs-toggle {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--plum);
+  text-decoration: underline;
+  flex-shrink: 0;
+}
+.needs-body {
+  padding: 0 14px 14px;
+  border-top: 1px solid var(--line);
+}
+.needs-meta {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin: 10px 0 8px;
+}
+.needs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.needs-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.84rem;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+.needs-flag {
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--low);
+  flex-shrink: 0;
+}
+.needs-list li.out .needs-flag {
+  color: var(--out);
+}
+.needs-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+}
+.needs-actions .copy-btn {
+  margin: 0;
+}
+.link-out {
+  font-size: 0.76rem;
+  color: var(--plum);
+}
+
+/* Purchase form */
+.select-input,
+input[type='date'] {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--line);
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.95rem;
+  background: #fff;
+  color: var(--ink);
+  margin-bottom: 18px;
+}
+.amount-wrap {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  margin-bottom: 18px;
+  padding-left: 12px;
+}
+.amount-prefix {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+/* Typed to outrank the base input[type='text'] rule in styles.css, which
+   would otherwise draw a second border inside the wrapper. */
+input[type='text'].amount-input {
+  flex: 1;
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  background: none;
+  padding: 12px 12px 12px 6px;
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+input[type='text'].amount-input:focus {
+  outline: none;
+}
+.amount-wrap:focus-within {
+  border-color: var(--plum);
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+.choice-chip {
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: #fff;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+.choice-chip.active {
+  background: var(--plum);
+  border-color: var(--plum);
+  color: var(--cream);
+}
+.period-row {
+  margin-top: 4px;
+}
+
+/* Spending */
+.total-card {
+  background: var(--plum);
+  color: var(--cream);
+  border-radius: 12px;
+  padding: 18px;
+  text-align: center;
+  margin-bottom: 14px;
+}
+.total-label {
+  font-size: 0.76rem;
+  opacity: 0.8;
+}
+.total-amount {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1.3;
+}
+.total-sub {
+  font-size: 0.74rem;
+  opacity: 0.75;
+}
+
+.by-person {
+  margin-bottom: 16px;
+}
+.by-person-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.78rem;
+  padding: 4px 0;
+}
+.bp-name {
+  width: 32%;
+  color: var(--plum);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bp-bar {
+  flex: 1;
+  height: 8px;
+  background: #e8e1d0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.bp-fill {
+  display: block;
+  height: 100%;
+  background: var(--gold);
+  border-radius: 999px;
+}
+.bp-amount {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.buy-row {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--plum);
+  padding: 10px 12px;
+  margin-bottom: 6px;
+}
+.buy-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+.buy-site {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--plum);
+}
+.buy-amount {
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.buy-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+  font-size: 0.73rem;
+  color: var(--muted);
+}
+.buy-tag {
+  background: #efe9d8;
+  border-radius: 5px;
+  padding: 1px 6px;
+}
+.buy-notes {
+  font-style: italic;
+}
+.buy-void {
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--out);
+  font-size: 0.66rem;
+}
+.buy-row.voided {
+  border-left-color: var(--line);
+  opacity: 0.7;
+}
+.buy-row.voided .buy-site,
+.buy-row.voided .buy-amount {
+  text-decoration: line-through;
+}
