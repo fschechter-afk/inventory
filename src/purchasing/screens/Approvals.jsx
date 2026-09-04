@@ -18,7 +18,11 @@ export default function Approvals({ onOpen, onDecided, onToast, refreshKey }) {
   }, [refreshKey])
 
   async function decide(order, approve) {
-    const note = approve ? null : window.prompt('Why is this being turned down? (optional)') ?? ''
+    let note = null
+    if (!approve) {
+      note = window.prompt('Why is this being turned down? (optional)')
+      if (note === null) return // cancelled the prompt — do not turn it down
+    }
     setBusyId(order.id)
     setError(null)
     try {
