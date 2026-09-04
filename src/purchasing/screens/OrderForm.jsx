@@ -8,7 +8,7 @@ import {
   uploadReceipt,
 } from '../api.js'
 import { isoDate, money, nextStatuses, STATUS_LABEL, toNumber } from '../format.js'
-import { ErrorNote, Field, Loading, Modal, StatusPill, friendlyError } from '../ui.jsx'
+import { ErrorNote, Field, Loading, Modal, StatusPill } from '../ui.jsx'
 
 const blankItem = () => ({ name: '', quantity: '1', unit_price: '', sku: '', url: '' })
 

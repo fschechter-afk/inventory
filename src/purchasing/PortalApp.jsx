@@ -9,7 +9,7 @@ import {
   fetchVendors,
   signOut,
 } from './api.js'
-import { ErrorNote, Loading, Toast, friendlyError } from './ui.jsx'
+import { ErrorNote, Loading, Toast } from './ui.jsx'
 import SignIn from './SignIn.jsx'
 import Shop from './screens/Shop.jsx'
 import MyOrders from './screens/MyOrders.jsx'
