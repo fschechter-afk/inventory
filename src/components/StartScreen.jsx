@@ -53,6 +53,9 @@ export default function StartScreen({
         <button className="submit-btn" disabled={!catalogReady || !name.trim()} onClick={begin}>
           Begin Inventory Check
         </button>
+        <a className="back-link" href="#/shop">
+          Need to buy something? Open the LGHS Shopping Portal →
+        </a>
       </div>
     </div>
   )

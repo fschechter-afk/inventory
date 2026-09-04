@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - claude/shared-conversation-link-x0y45t
+      - claude/lghs-purchasing-portal-n1tik2
   workflow_dispatch:
 
 permissions:

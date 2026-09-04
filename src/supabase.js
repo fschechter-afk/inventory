@@ -2,8 +2,12 @@ import { createClient } from '@supabase/supabase-js'
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js'
 
 // Bundled at build time — no CDN <script> tag to fail on filtered networks.
+// One client for both apps in this bundle. Sessions persist because the
+// Shopping Portal signs staff in; the dorm inventory check stays anonymous and
+// is unaffected either way. `detectSessionInUrl` is off because this app uses
+// the URL hash for routing (#/shop) and there are no OAuth redirects to parse.
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { persistSession: false },
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
 })
 
 const CATALOG_CACHE_KEY = 'dormInventory.catalog.v1'

@@ -1,3 +1,49 @@
+# LGHS
+
+Two apps for Lubavitch Girls High School, sharing one Supabase project and one
+deployment:
+
+| App | Link | What it does |
+| --- | --- | --- |
+| **Shopping Portal** | `.../inventory/#/shop` | Every school purchase — who bought it, where, for which department and budget, was it approved, where is the receipt |
+| **Dorm Inventory** | `.../inventory/` | Weekly dorm pantry checks and the shopping list they produce |
+
+---
+
+# LGHS Shopping Portal
+
+One link every staff member starts from when they buy something for the school.
+Choose a department, pick a store, say what it's for, tap **Shop** — the vendor
+opens and the purchase gets tracked.
+
+- **Four taps to shop.** Department, store, purpose, go. The department is
+  pre-selected from the person's home department.
+- **Nothing is lost when a vendor won't cooperate.** Almost no retailer lets a
+  buyer pull their own order history (see
+  [docs/VENDOR_INTEGRATIONS.md](docs/VENDOR_INTEGRATIONS.md)), so tapping Shop
+  records the trip *before* the vendor opens — who, which budget, what for —
+  and the portal nudges people to fill in the order number, total and receipt
+  afterwards.
+- **Receipts are a photo, not a project.** The uploader opens the camera, and
+  saving a new order stays on the receipt step instead of closing.
+- **Approvals are enforced in the database.** Anything over the limit (default
+  $250, adjustable per person) waits for a department manager. An employee
+  cannot approve their own purchase.
+- **Budgets are visible where they matter** — the remaining balance shows on the
+  Shop screen before someone spends, not in a report afterwards.
+- **Administrators get the bookkeeping view**: spending by day/week/month/year,
+  by department, store and person; search and filter across everything; eight
+  reports, all exportable to Excel.
+- **Four roles** — employee, department manager, administrator, super admin —
+  enforced by Row Level Security, so an employee's browser genuinely cannot
+  fetch someone else's purchases.
+
+**Setup, roles, approvals, budgets and reports:
+[docs/SHOPPING_PORTAL.md](docs/SHOPPING_PORTAL.md).** Three one-time steps are
+needed before staff can sign in.
+
+---
+
 # LGHS Dorm Inventory
 
 Weekly dorm pantry inventory checks as an installable PWA. Tap through the
@@ -35,8 +81,10 @@ npm run build      # production build in dist/
 1. In this repo on GitHub: **Settings → Pages → Source: GitHub Actions**.
 2. Re-run the *Deploy to GitHub Pages* workflow (Actions tab → latest run →
    **Re-run all jobs**), or just push again.
-3. The app appears at `https://fschechter-afk.github.io/inventory/`. Open it
-   on a phone and "Add to Home Screen" to install it.
+3. The apps appear at `https://fschechter-afk.github.io/inventory/` (dorm
+   inventory) and `https://fschechter-afk.github.io/inventory/#/shop`
+   (Shopping Portal). Open either on a phone and "Add to Home Screen" to
+   install it.
 
 > Until step 1 is done, the workflow's **build** job passes but **deploy**
 > fails with `Failed to create deployment (status: 404) … Ensure GitHub Pages
@@ -52,6 +100,11 @@ Everything lives in the Supabase project `aheiyytqvzxkoowykkgt`
 | `inventory_items` | The item catalog: category, name, Food Program flag, ordering, `active` toggle |
 | `inventory_checks` | One row per submitted check (who, when, video links, low/out counts) |
 | `inventory_check_items` | Per-item status rows for each check (`ok` / `low` / `out`, qty when low) |
+
+The Shopping Portal's tables live in the same project; they are listed in
+[docs/SHOPPING_PORTAL.md](docs/SHOPPING_PORTAL.md#data-model). The project is
+also shared with the dorm chat app, so table and function names added here are
+prefixed or namespaced to avoid collisions.
 
 ### Editing the item list
 
