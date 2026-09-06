@@ -24,9 +24,11 @@ opens and the purchase gets tracked.
   and — for most vendors — every line item. The portal matches the two and
   writes the purchase with no typing at all. See
   [docs/AUTOMATIC_ORDER_CAPTURE.md](docs/AUTOMATIC_ORDER_CAPTURE.md).
-- **A receipt is a photo, and nothing else.** The camera opens straight away,
-  and the order number, date, every line item, tax and total are read off the
-  picture. Typed fields are hidden behind "No receipt? Enter it by hand".
+- **Online orders ask for nothing at all.** Nobody prints an Amazon receipt, so
+  the portal never asks for one — Amazon, Walmart.com, Sam's Club and
+  WebstaurantStore orders are recorded from the vendor's confirmation email,
+  items and all. The receipt photo is for walk-ins: Restaurant Depot, Costco,
+  the club floor at Sam's.
 - **Approvals are enforced in the database.** Anything over the limit (default
   $250, adjustable per person) waits for a department manager. An employee
   cannot approve their own purchase.

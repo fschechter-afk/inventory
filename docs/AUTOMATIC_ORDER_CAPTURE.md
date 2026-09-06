@@ -18,34 +18,60 @@ The staff member's only action is the one they were already taking: tapping
 
 \* Item detail depends on the vendor — see below.
 
-## What the vendors actually send
+## Online orders vs. walk-ins
 
-Checked against real confirmation emails, not assumptions:
+Nobody prints an Amazon receipt, so the portal never asks for one. Each store
+is marked `online`, `in_store` or `both`, and that decides what — if anything —
+the staff member is asked to do:
 
-**Target — everything.** A real confirmation contains the full item name,
-quantity, unit price, subtotal, delivery, tax, total, order number, date and
-the card's last four:
+| | Recorded from | Staff member does |
+| --- | --- | --- |
+| **Online** — Amazon, Walmart.com, Sam's Club online, WebstaurantStore | the vendor's confirmation email | nothing |
+| **Walk-in** — Restaurant Depot, Sam's Club club, Costco, local grocers | the register receipt | photographs it |
 
-```
-Order #902003420031683 · Placed April 30, 2026
-Boys' Stretch Skinny Fit Jeans - Cat & Jack™ Black Wash 16
-  Qty: 4 · $15.00 / ea
-Subtotal (4 items) $60.00 · Delivery Free · Estimated taxes $6.15
-Total $66.15 · Visa *1442
-```
+## How the items get read
 
-**Walmart grocery — order but not items.** Their app-style email gives order
-number, date, total and card, but names only the first item: *"Kellogg's Corn
-Flakes… + 15 items"*, with the rest behind a login. The order is captured; the
-items have to come from the receipt.
+The first version of this had hand-written parsers per vendor. That only works
+for formats somebody has actually looked at — and only until the vendor
+redesigns its template. There were real Target and Walmart emails to work from
+and none for Amazon, Sam's Club or WebstaurantStore, so writing regexes for
+those three would have been guessing.
 
-**Everything else — generic parse.** Order number, date, subtotal, shipping,
-tax and total follow conventional wording almost everywhere, so an unknown
-vendor still produces a real, reconcilable record.
+**The model reads the email body instead.** No per-vendor knowledge, nothing to
+rewrite when a template changes, and it works the first time a vendor nobody
+anticipated sends its first confirmation. The deterministic parsers survive as
+a free fast path where they are proven; anything they cannot fully read goes to
+the model.
 
-Deterministic parsers are written only for formats that have actually been
-examined. Guessing at a vendor's layout produces a parser that fails silently,
-which is worse than admitting the email is unknown.
+### Your four common stores
+
+| Store | Order in email | Items in email | Notes |
+| --- | --- | --- | --- |
+| **Amazon** | yes | yes | Confirmations list the items; the model reads them. [Amazon Business](https://developer-docs.amazon.com/amazon-business/docs/reporting-api-overview) also has a real order-reporting API if the school moves onto a Business account. |
+| **WebstaurantStore** | yes | yes | Detailed confirmation per order. |
+| **Sam's Club** | yes | yes | Online orders email a confirmation. Club walk-ins need the receipt photo. |
+| **Walmart** | yes | **no** | Verified across all three of their email types — see below. |
+
+### The Walmart exception, verified
+
+Walmart's grocery emails were checked directly, not assumed:
+
+| Email | Contains |
+| --- | --- |
+| "Thanks for your delivery order" | order #, date, total, card — **one item name**, "+15 items" behind a login |
+| "Delivered: …" | `15 items arrived`, `Substituted`, `1 item unavailable`, bare quantities — **no names, no prices**; the items are image tiles |
+| "Review your order updates" | substitution counts only |
+
+There is no item text in any of them to read. For Walmart items the answer is
+the **Walmart Business itemized export**: Purchase History → All Purchases →
+Download → tick *itemized purchase history data for individual items in each
+order* → CSV, org-wide for an admin
+([docs](https://business.walmart.com/help/article/purchase-history/2da60627489141b998179eb048524de1)).
+Walmart Business accounts are free, and this is the single highest-value
+account change available.
+
+Vendors are marked `items_in_email = false` when their email is known to
+withhold the items, so the portal can say so rather than pretending.
 
 ## The pipeline
 

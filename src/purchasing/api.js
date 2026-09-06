@@ -72,7 +72,7 @@ export const fetchDepartments = (includeInactive = false) => {
 export const fetchVendors = (includeInactive = false) => {
   let q = supabase
     .from('order_sites')
-    .select('id, name, url, emoji, blurb, category, category_order, sort_order, active, integration, integration_note, account_hint, requires_receipt')
+    .select('id, name, url, emoji, blurb, category, category_order, sort_order, active, integration, integration_note, account_hint, requires_receipt, channel, items_in_email')
     .order('category_order')
     .order('sort_order')
   if (!includeInactive) q = q.eq('active', true)

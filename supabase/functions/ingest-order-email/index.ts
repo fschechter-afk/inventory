@@ -13,6 +13,7 @@
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { parseOrderEmail } from './parse-order-email.js'
+import { extractFromEmail, merge } from './extract.ts'
 
 // How far back to look for the shopping trip this email belongs to. Long
 // enough to cover a warehouse run, short enough that two trips to the same
@@ -66,7 +67,22 @@ Deno.serve(async (req) => {
   if (seen) return json({ status: 'duplicate', ...seen })
 
   const looksLikeOrder = ORDER_HINT.test(subject) && !NOT_AN_ORDER.test(subject)
-  const parsed = parseOrderEmail({ from, subject, body })
+  const fast = parseOrderEmail({ from, subject, body })
+
+  // The fast path only covers formats that have actually been examined. For
+  // everything else — and for any email whose items it could not read — the
+  // model reads the body. It needs no per-vendor knowledge, which is the only
+  // way Amazon, Sam's Club and WebstaurantStore get itemised without someone
+  // hand-writing a parser for each and re-writing it at every redesign.
+  let parsed = fast
+  const apiKey = Deno.env.get('ANTHROPIC_API_KEY')
+  if (looksLikeOrder && apiKey && (fast.needsExtraction || fast.total == null)) {
+    try {
+      parsed = merge(fast, await extractFromEmail({ from, subject, body }, apiKey))
+    } catch (e) {
+      console.error('Model extraction failed, keeping the fast-path result:', e)
+    }
+  }
 
   const row = {
     message_id: messageId,

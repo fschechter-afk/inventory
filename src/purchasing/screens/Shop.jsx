@@ -69,7 +69,11 @@ export default function Shop({ me, departments, vendors, settings, budgets, onRe
       if (tab && vendor.url) tab.location = vendor.url
       setOpenSessions((prev) => [session, ...prev])
       setCustom(null)
-      onToast(`${name} · ${department?.name} — photograph the receipt when you're done`)
+      onToast(
+        vendor.channel === 'in_store'
+          ? `${name} · ${department?.name} — photograph the receipt`
+          : `${name} · ${department?.name} — the confirmation email does the rest`
+      )
     } catch (e) {
       if (tab) tab.close()
       setError(e)
@@ -95,26 +99,39 @@ export default function Shop({ me, departments, vendors, settings, budgets, onRe
 
       {openSessions.length > 0 && (
         <div className="pp-card" style={{ borderTop: '3px solid var(--gold)' }}>
-          <h2>Add the receipt</h2>
-          <p className="pp-muted" style={{ marginTop: -4, marginBottom: 12 }}>
-            Snap a photo and the portal reads the rest off it.
-          </p>
-          {openSessions.map((session) => (
-            <div key={session.id} className="pp-spread" style={{ marginBottom: 10 }}>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{session.vendor_name}</div>
-                <div className="pp-muted">{relativeTime(session.opened_at)}</div>
+          <h2>Open trips</h2>
+          {openSessions.map((session) => {
+            const vendor = vendors.find((v) => v.id === session.vendor_id)
+            // An online order records itself from the vendor's confirmation
+            // email — there is no receipt to photograph and nothing to ask for.
+            const online = !vendor || vendor.channel === 'online'
+            return (
+              <div key={session.id} style={{ marginBottom: 14 }}>
+                <div className="pp-spread">
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{session.vendor_name}</div>
+                    <div className="pp-muted">{relativeTime(session.opened_at)}</div>
+                  </div>
+                  <div className="pp-row">
+                    <button
+                      className={`pp-btn small ${online ? 'ghost' : ''}`}
+                      onClick={() => onRecord({ session })}
+                    >
+                      {online ? 'Add details' : '📷 Receipt'}
+                    </button>
+                    <button className="pp-link" onClick={() => dismiss(session)}>
+                      Didn&apos;t buy
+                    </button>
+                  </div>
+                </div>
+                <div className="pp-muted" style={{ marginTop: 4 }}>
+                  {online
+                    ? `Nothing to do — ${session.vendor_name}'s confirmation email records this automatically.`
+                    : 'Photograph the receipt and the portal reads the rest off it.'}
+                </div>
               </div>
-              <div className="pp-row">
-                <button className="pp-btn small" onClick={() => onRecord({ session })}>
-                  📷 Receipt
-                </button>
-                <button className="pp-link" onClick={() => dismiss(session)}>
-                  Didn&apos;t buy
-                </button>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
@@ -206,7 +223,9 @@ export default function Shop({ me, departments, vendors, settings, budgets, onRe
         )}
 
         <p className="pp-muted" style={{ marginTop: 14, marginBottom: 0 }}>
-          Tapping a store opens it and starts tracking. Nothing else to fill in.
+          Tapping a store opens it and starts tracking. Online orders record
+          themselves from the confirmation email; for a walk-in, photograph the
+          receipt.
         </p>
       </div>
     </>

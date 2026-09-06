@@ -105,6 +105,9 @@ export default function OrderForm({
   const totalValue = toNumber(form.total) || 0
   const limit = me.auto_approve_limit ?? settings?.approval_threshold ?? 0
   const department = departments.find((d) => d.id === form.department_id)
+  const vendor = vendors.find((v) => v.id === form.vendor_id)
+  // An online order has no receipt to photograph; its record arrives by email.
+  const online = !vendor || vendor.channel === 'online'
 
   /** Make sure a purchase row exists, so the receipt has something to attach
    *  to. Called by the upload path before the file goes anywhere. */
@@ -237,10 +240,20 @@ export default function OrderForm({
             </div>
           )}
 
+          {online && !receipts.length && !existing?.order_number && (
+            <div className="pp-notice info">
+              <strong>Nothing to fill in.</strong> {vendor?.name || 'This store'} emails a
+              confirmation and the portal records the order and its items from it, usually
+              within a few minutes. Fill anything in below only if it never arrives.
+            </div>
+          )}
+
           <Receipts
             receipts={receipts}
             busy={busy}
             extraction={extraction}
+            online={online}
+            vendorName={vendor?.name}
             onPick={onPickReceipt}
             onRemove={async (receipt) => {
               setReceipts((prev) => prev.filter((r) => r.id !== receipt.id))
@@ -261,7 +274,7 @@ export default function OrderForm({
 
           {!manual && !busy && (
             <button className="pp-link" onClick={() => setManual(true)}>
-              No receipt? Enter it by hand
+              {online ? 'Email never arrived? Enter it by hand' : 'No receipt? Enter it by hand'}
             </button>
           )}
 
@@ -421,7 +434,7 @@ export default function OrderForm({
   )
 }
 
-function Receipts({ receipts, busy, extraction, onPick, onRemove }) {
+function Receipts({ receipts, busy, extraction, online, vendorName, onPick, onRemove }) {
   const [error, setError] = useState(null)
 
   async function open(receipt) {
@@ -447,7 +460,7 @@ function Receipts({ receipts, busy, extraction, onPick, onRemove }) {
         </div>
       ))}
 
-      <label className={`pp-upload ${busy ? 'busy' : ''} ${receipts.length ? '' : 'primary'}`}>
+      <label className={`pp-upload ${busy ? 'busy' : ''} ${receipts.length || online ? '' : 'primary'}`}>
         <input
           type="file"
           accept="image/*,application/pdf"
@@ -462,7 +475,9 @@ function Receipts({ receipts, busy, extraction, onPick, onRemove }) {
             ? 'Reading the receipt…'
             : receipts.length
               ? '+ Another receipt'
-              : '📷 Photograph the receipt'}
+              : online
+                ? '📎 Attach the confirmation or invoice'
+                : '📷 Photograph the receipt'}
       </label>
 
       {extraction && (
@@ -475,7 +490,9 @@ function Receipts({ receipts, busy, extraction, onPick, onRemove }) {
 
       {!receipts.length && !busy && (
         <p className="pp-muted" style={{ marginTop: 8, textAlign: 'center' }}>
-          The order number, items and total come off the photo.
+          {online
+            ? 'Only if you have one — the email already carries the details.'
+            : 'The order number, items and total come off the photo.'}
         </p>
       )}
     </div>
