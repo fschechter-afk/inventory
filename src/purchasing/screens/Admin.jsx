@@ -334,6 +334,12 @@ function BudgetEditor({ department, budget, onClose, onSave }) {
 
 // --- vendors ---------------------------------------------------------------
 
+const CHANNEL_LABEL = {
+  online: 'Online',
+  in_store: 'In person',
+  both: 'Online or in person',
+}
+
 const INTEGRATION_LABEL = {
   manual: 'Typed in by hand',
   email: 'Order confirmation email',
@@ -359,6 +365,7 @@ function Vendors({ data, run }) {
             sort_order: 0,
             active: true,
             integration: 'manual',
+            channel: 'online',
             requires_receipt: true,
           })
         }
@@ -374,7 +381,8 @@ function Vendors({ data, run }) {
                 {v.emoji} {v.name}
               </strong>
               <div className="pp-muted">
-                {v.category} · {INTEGRATION_LABEL[v.integration] || v.integration}
+                {CHANNEL_LABEL[v.channel] || v.channel} · {v.category}
+                {v.items_in_email === false && ' · email has no items'}
                 {!v.active && ' · hidden'}
               </div>
             </div>
@@ -450,6 +458,20 @@ function VendorEditor({ vendor, onClose, onSave }) {
           />
         </Field>
       </div>
+      <Field
+        label="How people buy here"
+        hint="Decides what staff are asked for: an online order records itself from the confirmation email; a walk-in needs the receipt photographed."
+      >
+        <select
+          className="pp-select"
+          value={form.channel || 'online'}
+          onChange={(e) => set({ channel: e.target.value })}
+        >
+          <option value="online">Online only — recorded from the email</option>
+          <option value="in_store">In person only — photograph the receipt</option>
+          <option value="both">Both</option>
+        </select>
+      </Field>
       <Field
         label="How order data reaches the portal"
         hint="Everything falls back to manual entry plus a receipt; this records what the store actually offers."
