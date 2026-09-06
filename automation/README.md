@@ -66,6 +66,11 @@ in-store tiles go straight to the purchase form for exactly that.
 - Apps Script → **Executions** shows every run and what it logged.
 - Run **`dryRun`** any time to see what it makes of recent mail without
   writing anything.
+- Run **`sampleBodies`** to print the top of one recent email per store, as
+  the script actually sees it. That's the way to find out whether a store's
+  item lines survive being flattened to text — useful if the portal should
+  one day record *what* was bought and not just the total. It writes nothing,
+  but the log is raw email text, so read it before sharing it.
 - To pause it, disable the trigger. To stop it entirely, delete the trigger.
   Nothing already imported is affected.
 

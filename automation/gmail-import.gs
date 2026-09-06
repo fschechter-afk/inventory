@@ -206,6 +206,28 @@ function toIsoDate(date) {
 
 // ------------------------------------------------------------------- checks
 
+/** Prints the top of one recent email per store, so the item lines can be
+ *  read as the script actually sees them. Writes nothing. Look it over before
+ *  sharing the log anywhere — it's the raw email text. */
+function sampleBodies() {
+  for (var i = 0; i < STORES.length; i++) {
+    var threads = GmailApp.search('newer_than:60d from:' + STORES[i].from, 0, 5)
+    Logger.log('================ ' + STORES[i].name + ' ================')
+    if (!threads.length) {
+      Logger.log('(nothing from this store in the last 60 days)')
+      continue
+    }
+    var msg = threads[0].getMessages()[0]
+    Logger.log('subject: ' + msg.getSubject())
+    Logger.log('total found: ' + findTotal(msg.getPlainBody() || ''))
+    Logger.log('--- first 60 lines of the body as the script sees it ---')
+    var lines = (msg.getPlainBody() || '').split('\n')
+    for (var n = 0; n < Math.min(60, lines.length); n++) {
+      if (lines[n].trim()) Logger.log(lines[n])
+    }
+  }
+}
+
 /** Run this by hand to see what the importer makes of recent mail, without
  *  writing anything to the portal. */
 function dryRun() {
