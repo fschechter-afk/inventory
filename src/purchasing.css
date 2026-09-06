@@ -512,3 +512,8 @@
   color: var(--muted);
   margin-bottom: 22px;
 }
+
+/* --- item history -------------------------------------------------------- */
+
+.pp-up { color: var(--out); font-weight: 600; }
+.pp-down { color: var(--ok); font-weight: 600; }

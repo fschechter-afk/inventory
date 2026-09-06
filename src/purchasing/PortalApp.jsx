@@ -17,12 +17,14 @@ import OrderForm from './screens/OrderForm.jsx'
 import Approvals from './screens/Approvals.jsx'
 import Dashboard from './screens/Dashboard.jsx'
 import Orders from './screens/Orders.jsx'
+import Items from './screens/Items.jsx'
 import Reports from './screens/Reports.jsx'
 import Admin from './screens/Admin.jsx'
 
 const TAB_TITLES = {
   shop: 'LGHS Shopping Portal',
   mine: 'My purchases',
+  items: 'Item history',
   approvals: 'Approvals',
   dashboard: 'Dashboard',
   orders: 'All purchases',
@@ -131,6 +133,7 @@ export default function PortalApp() {
   const tabs = [
     { key: 'shop', icon: '🛒', label: 'Shop' },
     { key: 'mine', icon: '🧾', label: 'Mine' },
+    { key: 'items', icon: '📦', label: 'Items' },
     canApprove && { key: 'approvals', icon: '✅', label: 'Approve' },
     (canApprove || isAdmin) && { key: 'dashboard', icon: '📊', label: 'Spending' },
     isAdmin && { key: 'admin', icon: '⚙️', label: 'Admin' },
@@ -158,7 +161,7 @@ export default function PortalApp() {
         </button>
       </header>
 
-      <main className={`pp-main ${['orders', 'reports'].includes(tab) ? 'wide' : ''}`}>
+      <main className={`pp-main ${['orders', 'reports', 'items'].includes(tab) ? 'wide' : ''}`}>
         {tab === 'shop' && (
           <Shop
             me={me}
@@ -171,6 +174,16 @@ export default function PortalApp() {
           />
         )}
         {tab === 'mine' && <MyOrders me={me} onOpen={openOrder} refreshKey={refreshKey} />}
+        {tab === 'items' && (
+          <Items
+            departments={data.allDepartments}
+            vendors={data.allVendors}
+            staff={data.staff}
+            canSeeOthers={canApprove}
+            onOpenPurchase={openOrder}
+            refreshKey={refreshKey}
+          />
+        )}
         {tab === 'approvals' && (
           <Approvals
             onOpen={openOrder}

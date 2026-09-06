@@ -155,6 +155,22 @@ export async function fetchPurchases(filters = {}) {
     .then(unwrap)
 }
 
+/** Every line item ever recorded, newest first. Same RLS as the purchases
+ *  they belong to, so an employee sees only their own. */
+export function fetchItems(filters = {}) {
+  let q = supabase.from('v_purchase_items').select('*')
+  if (filters.search) q = q.ilike('name', `%${filters.search.replace(/[%,]/g, '')}%`)
+  if (filters.departmentId) q = q.eq('department_id', filters.departmentId)
+  if (filters.vendorId) q = q.eq('vendor_id', filters.vendorId)
+  if (filters.staffId) q = q.eq('staff_id', filters.staffId)
+  if (filters.from) q = q.gte('effective_date', filters.from)
+  if (filters.to) q = q.lte('effective_date', filters.to)
+  return q
+    .order('effective_date', { ascending: false })
+    .limit(filters.limit ?? 3000)
+    .then(unwrap)
+}
+
 export const fetchPendingApprovals = () =>
   supabase
     .from('v_purchase_orders')
