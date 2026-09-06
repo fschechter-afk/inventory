@@ -151,6 +151,12 @@ export default function Portal() {
     window.open(site.url, '_blank', 'noopener,noreferrer')
   }
 
+  // Shops visited in person have no website worth opening — tapping one is a
+  // request to log the receipt.
+  function logForSite(site) {
+    setLogging({ site: { siteId: site.id, siteName: site.name }, returning: false })
+  }
+
   function dismissTrip() {
     clearTrip()
     setLogging(null)
@@ -242,7 +248,7 @@ export default function Portal() {
               online.
             </div>
           )}
-          <SiteGrid categories={categories} onOpen={openSite} />
+          <SiteGrid categories={categories} onOpen={openSite} onLog={logForSite} />
           <button
             className="ghost-btn"
             onClick={() => setLogging({ site: null, returning: false })}
@@ -256,7 +262,9 @@ export default function Portal() {
         </main>
       )}
 
-      {tab === 'spending' && <Spending reloadKey={reloadKey} onToast={showToast} />}
+      {tab === 'spending' && (
+        <Spending reloadKey={reloadKey} orderedBy={name} onToast={showToast} />
+      )}
 
       {logging && (
         <LogPurchase

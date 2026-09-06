@@ -8,7 +8,7 @@ export async function fetchSites() {
   try {
     const { data, error } = await supabase
       .from('order_sites')
-      .select('id, name, url, blurb, emoji, category, category_order, sort_order')
+      .select('id, name, url, blurb, emoji, kind, category, category_order, sort_order')
       .eq('active', true)
       .order('category_order')
       .order('sort_order')
@@ -68,7 +68,7 @@ export async function fetchPurchases({ since = null, limit = 500 } = {}) {
   let query = supabase
     .from('purchases')
     .select(
-      'id, ordered_by, site_name, amount, spent_on, notes, purchased_on, voided, void_reason, created_at'
+      'id, ordered_by, site_name, amount, spent_on, notes, purchased_on, voided, void_reason, source, created_at'
     )
     .order('purchased_on', { ascending: false })
     .order('created_at', { ascending: false })
@@ -77,6 +77,17 @@ export async function fetchPurchases({ since = null, limit = 500 } = {}) {
   const { data, error } = await query
   if (error) throw error
   return data || []
+}
+
+/** Put a name to an imported purchase. Only fills in an unassigned one, so
+ *  claiming can never rewrite somebody else's row. */
+export async function claimPurchase(id, orderedBy) {
+  const { data, error } = await supabase.rpc('claim_purchase', {
+    p_id: id,
+    p_ordered_by: orderedBy,
+  })
+  if (error) throw error
+  return data === true
 }
 
 /** Strike a purchase from the totals without erasing it. */

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchPurchases, voidPurchase } from '../api.js'
+import { claimPurchase, fetchPurchases, voidPurchase } from '../api.js'
 import { dayLabel, money, monthStartISO } from '../format.js'
+
+const UNASSIGNED = 'Unassigned'
 
 const PERIODS = [
   { key: 'month', label: 'This month' },
@@ -8,7 +10,7 @@ const PERIODS = [
   { key: 'all', label: 'All time' },
 ]
 
-export default function Spending({ reloadKey, onToast }) {
+export default function Spending({ reloadKey, orderedBy, onToast }) {
   const [period, setPeriod] = useState('month')
   const [person, setPerson] = useState('everyone')
   const [rows, setRows] = useState(null)
@@ -61,6 +63,11 @@ export default function Spending({ reloadKey, onToast }) {
     return [...totals.entries()].sort((a, b) => b[1] - a[1])
   }, [rows])
 
+  const unclaimed = useMemo(
+    () => (rows || []).filter((r) => r.ordered_by === UNASSIGNED && !r.voided).length,
+    [rows]
+  )
+
   const days = useMemo(() => {
     const out = []
     const byDate = new Map()
@@ -98,6 +105,17 @@ export default function Spending({ reloadKey, onToast }) {
       .catch(() => onToast("Couldn't copy — try selecting the text manually"))
   }
 
+  async function claim(row) {
+    try {
+      const ok = await claimPurchase(row.id, orderedBy)
+      setLocalReload((k) => k + 1)
+      onToast(ok ? `Yours — ${row.site_name} logged to ${orderedBy}` : 'Someone already claimed that one')
+    } catch (e) {
+      console.error('Claiming the purchase failed:', e)
+      onToast("Couldn't do that — are you online?")
+    }
+  }
+
   async function strike(row) {
     const ok = window.confirm(
       `Strike ${money(row.amount)} at ${row.site_name} from the totals?\n\n` +
@@ -127,6 +145,14 @@ export default function Spending({ reloadKey, onToast }) {
           </button>
         ))}
       </div>
+
+      {unclaimed > 0 && (
+        <div className="claim-banner">
+          📥 {unclaimed} order{unclaimed === 1 ? '' : 's'} came in from the inbox and
+          {unclaimed === 1 ? " doesn't" : " don't"} have a name yet. Tap{' '}
+          <strong>that was me</strong> on yours.
+        </div>
+      )}
 
       <div className="total-card">
         <div className="total-label">
@@ -197,9 +223,21 @@ export default function Spending({ reloadKey, onToast }) {
                 <span className="buy-amount">{money(row.amount)}</span>
               </div>
               <div className="buy-meta">
-                <span>{row.ordered_by}</span>
+                <span className={row.ordered_by === UNASSIGNED ? 'buy-unassigned' : ''}>
+                  {row.ordered_by === UNASSIGNED ? 'no name yet' : row.ordered_by}
+                </span>
+                {row.source === 'email' && (
+                  <span className="buy-tag auto" title="Read from the order confirmation email">
+                    auto
+                  </span>
+                )}
                 <span className="buy-tag">{row.spent_on}</span>
                 {row.notes && <span className="buy-notes">{row.notes}</span>}
+                {!row.voided && row.ordered_by === UNASSIGNED && (
+                  <button className="claim-btn" onClick={() => claim(row)}>
+                    that was me
+                  </button>
+                )}
                 {row.voided ? (
                   <span className="buy-void">struck</span>
                 ) : (

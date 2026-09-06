@@ -56,48 +56,70 @@ npm run build      # production build in dist/
 **Share this one link with everyone who buys anything for the school:**
 `https://fschechter-afk.github.io/inventory/portal/`
 
-The point is that one link is easier to remember than a spreadsheet, so the
-spending record fills itself in as a side effect of ordering:
+Most of it fills itself in. Online orders arrive on their own; in-store trips
+take about ten seconds.
 
-1. You type your name once — it's remembered on that device.
-2. You tap the store you want. It opens in a new tab, and the portal quietly
-   remembers where you went.
-3. When you come back to the portal tab, it asks **"Back from Costco?"** and
-   takes the total. Amount, what it was for, the date, and an optional note.
-4. **Spending** shows everything — by person, by date, by amount, with
-   this-month / last-month / all-time totals, a per-person breakdown, and a
-   **Copy as spreadsheet** button that pastes straight into Sheets or Excel.
+### Online orders — nobody logs anything
 
-Details worth knowing:
+Every confirmation email goes to `onlineorders@lghschicago.org`, and a Google
+Apps Script reads that inbox every fifteen minutes and files each order in the
+portal: store, total, date, order number. Setup is a one-time ten minutes and
+is written up in [`automation/`](automation/README.md).
 
-- **Nothing gets missed.** If you close the tab before logging, the prompt is
-  waiting the next time you open the portal (up to a week later). Bought
-  something in a physical store, or over the phone? **Log a purchase from
-  somewhere else** takes any store name.
-- **What we need is right there.** The top of the Order tab shows the items
-  the last inventory check flagged as low or out, so whoever is ordering
-  doesn't have to switch apps. The inventory app's Shopping List links here
-  with **Order these →**.
-- **Mistakes are fixable, quietly.** A wrong amount can be **struck** — it
-  stays in the list, crossed out, and drops out of the totals. Nothing is
-  ever deleted, so the record can't silently change.
-- **Works offline.** A purchase logged with no signal is saved on the device
-  and sent when you're back online.
+A shared mailbox doesn't say *who* ordered, so imports show up marked *no name
+yet* with an `auto` tag. Whoever placed it taps **that was me** and it's
+theirs — and a purchase that already has a name can't be overwritten. One
+order makes one row however many emails a store sends about it, because the
+order number is the key.
+
+The four online stores are Amazon, Walmart, Sam's Club and WebstaurantStore.
+
+### In store — tap the shop, put in the total
+
+Jewel-Osco, Kol Tuv, Restaurant Depot and Aldi have no confirmation email, so
+their tiles skip the website and go straight to the purchase form with the
+shop already filled in. Type the total and you're done. Anywhere else goes in
+through **Log a purchase from somewhere else**.
+
+### Ordering from the portal
+
+Tapping an online store opens it in a new tab and quietly remembers where you
+went; when you come back the portal asks **"Back from Amazon?"** and takes the
+total. If you close the tab first, the prompt is still waiting next time you
+open the portal, up to a week later. You never have to retype the amount:
+**Paste receipt** reads the confirmation email off the clipboard and fills the
+form in, and on an installed phone app you can share the email straight into
+the portal from Mail or Gmail. What it read is shown before anything is saved,
+and every field stays editable.
+
+### Spending
+
+Everything by person, date and amount, with this-month / last-month /
+all-time totals, a per-person breakdown, a filter by person, and **Copy as
+spreadsheet** to paste into Sheets or Excel. A wrong amount can be **struck**
+— it stays in the list, crossed out, and drops out of the totals. Nothing is
+ever deleted.
+
+The top of the Order tab also shows what the last inventory check flagged as
+low or out, so whoever's ordering doesn't have to switch apps. The inventory
+app's Shopping List links here with **Order these →**.
+
+Purchases logged with no signal wait on the device and send when you're back
+online.
 
 ### Editing the store list
 
 Supabase Dashboard → Table Editor → `order_sites`. Same rules as the item
 catalog — no redeploy needed:
 
-- **Add a store**: insert a row with `name`, `url`, and optionally `blurb`
-  (the small line on the tile), `emoji`, `category`, `category_order` (order
-  of the section) and `sort_order` (order within it).
+- **Add a store**: insert a row with `name`, `url`, `kind` (`online` or
+  `in_store`), and optionally `blurb`, `emoji`, `category`, `category_order`
+  and `sort_order`. To have its emails imported too, also add it to `STORES`
+  in [`automation/gmail-import.gs`](automation/gmail-import.gs).
 - **Retire a store**: set `active` to `false`. Past purchases keep the name
-  they were logged under either way.
-
-The starting list is a guess at the useful ones — kosher grocery, delivery,
-warehouse, general. Trim it to what's actually used; a shorter grid is a
-faster one.
+  they were logged under either way. The stores that aren't in use — Costco,
+  Instacart, Target, Staples, Home Depot, Mariano's, Hungarian Kosher — are
+  already sitting there inactive, one toggle from coming back.
 
 ## Database
 
@@ -110,11 +132,15 @@ Everything lives in the Supabase project `aheiyytqvzxkoowykkgt`
 | `inventory_checks` | One row per submitted check (who, when, video links, low/out counts) |
 | `inventory_check_items` | Per-item status rows for each check (`ok` / `low` / `out`, qty when low) |
 | `order_sites` | The store tiles on the portal: name, url, blurb, emoji, ordering, `active` toggle |
-| `purchases` | One row per purchase: who, which store, amount, what for, date, notes, `voided` flag |
+| `purchases` | One row per purchase: who, which store, amount, what for, date, notes, `voided` flag, and `source` (`portal` or `email`) with the `source_ref` that keeps imports from doubling up |
 
 Row Level Security applies to the new tables the same way: the shipped key
-can read both and insert a purchase, and nothing else. Corrections go
-through `void_purchase()`, which marks a row rather than rewriting it.
+can read both and insert a purchase, and nothing else. It holds no update or
+delete permission at all — the three things that change a row go through
+functions that each allow exactly one change: `void_purchase()` strikes a
+purchase without erasing it, `claim_purchase()` fills in a name only where
+there isn't one, and `import_purchase_from_email()` refuses to insert an
+order it has already seen.
 
 ### Editing the item list
 
@@ -134,7 +160,7 @@ Supabase Dashboard → Table Editor → `inventory_items`:
 
 The schema and the starting item and store lists are checked in under
 [`supabase/migrations/`](supabase/migrations), so a fresh project can be
-rebuilt by running those four files in the SQL Editor, in order. Both seeds
+rebuilt by running those six files in the SQL Editor, in order. The seeds
 are idempotent — re-running them won't duplicate or overwrite dashboard
 edits. (They're already applied to the project above; the files are there so
 the database can be rebuilt from scratch.)

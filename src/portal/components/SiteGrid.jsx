@@ -1,4 +1,4 @@
-export default function SiteGrid({ categories, onOpen }) {
+export default function SiteGrid({ categories, onOpen, onLog }) {
   if (!categories.length) return null
 
   return (
@@ -7,15 +7,23 @@ export default function SiteGrid({ categories, onOpen }) {
         <section className="site-cat" key={cat.name}>
           <h2>{cat.name}</h2>
           <div className="site-grid">
-            {cat.sites.map((site) => (
-              <button className="site-tile" key={site.id} onClick={() => onOpen(site)}>
-                <span className="site-emoji" aria-hidden="true">
-                  {site.emoji || '🛒'}
-                </span>
-                <span className="site-name">{site.name}</span>
-                {site.blurb && <span className="site-blurb">{site.blurb}</span>}
-              </button>
-            ))}
+            {cat.sites.map((site) => {
+              const inStore = site.kind === 'in_store'
+              return (
+                <button
+                  className={`site-tile ${inStore ? 'in-store' : ''}`}
+                  key={site.id}
+                  onClick={() => (inStore ? onLog(site) : onOpen(site))}
+                >
+                  <span className="site-emoji" aria-hidden="true">
+                    {site.emoji || (inStore ? '🏪' : '🛒')}
+                  </span>
+                  <span className="site-name">{site.name}</span>
+                  {site.blurb && <span className="site-blurb">{site.blurb}</span>}
+                  <span className="site-action">{inStore ? 'Log a receipt' : 'Open store →'}</span>
+                </button>
+              )
+            })}
           </div>
         </section>
       ))}

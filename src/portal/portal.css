@@ -448,3 +448,51 @@ textarea.paste-area:focus {
 .paste-found strong {
   color: var(--ink);
 }
+
+/* In-store tiles: no website to open, just a receipt to log */
+.site-tile.in-store {
+  border-left-color: var(--plum);
+}
+.site-action {
+  margin-top: 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.site-tile.in-store .site-action {
+  color: var(--plum);
+}
+
+/* Orders that arrived from the inbox and need a name */
+.claim-banner {
+  background: #fbebd8;
+  border: 1px solid #e8d3ae;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: #8a6321;
+}
+.claim-btn {
+  background: var(--plum);
+  color: var(--cream);
+  border: none;
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.buy-unassigned {
+  font-style: italic;
+  color: var(--low);
+}
+.buy-tag.auto {
+  background: #eadff0;
+  color: var(--plum);
+  font-weight: 600;
+}
