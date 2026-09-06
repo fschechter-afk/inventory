@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { fetchSites, groupSitesByCategory, logPurchase } from './api.js'
+import { fetchSites, groupSitesByCategory, logPurchase, recordOrderIntent } from './api.js'
 import { parseReceipt } from './receipt.js'
 import { flushOutbox, outboxCount, queuePurchase } from '../outbox.js'
 import { money } from './format.js'
@@ -148,6 +148,13 @@ export default function Portal() {
       TRIP_KEY,
       JSON.stringify({ siteId: site.id, siteName: site.name, url: site.url, at: Date.now() })
     )
+    // Tell the database who's going where, so an imported confirmation can be
+    // credited without anyone claiming it. Never block opening the store on it.
+    if (site.auto_import) {
+      recordOrderIntent({ orderedBy: name, siteId: site.id, siteName: site.name }).catch((e) =>
+        console.warn('Could not record who is ordering:', e)
+      )
+    }
     window.open(site.url, '_blank', 'noopener,noreferrer')
   }
 

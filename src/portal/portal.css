@@ -525,3 +525,26 @@ textarea.paste-area:focus {
 .self-log p:last-child {
   margin-bottom: 0;
 }
+
+/* Claiming an order the portal couldn't attribute on its own */
+.claim-by-number {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 10px;
+}
+.claim-by-number input[type='text'] {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 0.82rem;
+  border-radius: 8px;
+  border: 1.5px solid #e8d3ae;
+  background: #fff;
+}
+.claim-by-number .claim-btn {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  font-size: 0.76rem;
+}

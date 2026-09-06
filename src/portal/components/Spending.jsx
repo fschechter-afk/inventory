@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { claimPurchase, fetchPurchases, voidPurchase } from '../api.js'
+import { claimByOrderNumber, claimPurchase, fetchPurchases, voidPurchase } from '../api.js'
 import { dayLabel, money, monthStartISO } from '../format.js'
 
 const UNASSIGNED = 'Unassigned'
@@ -16,6 +16,8 @@ export default function Spending({ reloadKey, orderedBy, onToast }) {
   const [rows, setRows] = useState(null)
   const [error, setError] = useState('')
   const [localReload, setLocalReload] = useState(0)
+  const [orderNumber, setOrderNumber] = useState('')
+  const [claiming, setClaiming] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -116,6 +118,29 @@ export default function Spending({ reloadKey, orderedBy, onToast }) {
     }
   }
 
+  async function claimByNumber() {
+    const entered = orderNumber.trim()
+    if (entered.length < 4) {
+      onToast('Paste the order number from the confirmation')
+      return
+    }
+    setClaiming(true)
+    try {
+      const found = await claimByOrderNumber(entered, orderedBy)
+      if (found) {
+        setOrderNumber('')
+        setLocalReload((k) => k + 1)
+        onToast(`Found it — logged to ${orderedBy}`)
+      } else {
+        onToast("No unclaimed order matches that number")
+      }
+    } catch (e) {
+      console.error('Claiming by order number failed:', e)
+      onToast("Couldn't do that — are you online?")
+    }
+    setClaiming(false)
+  }
+
   async function strike(row) {
     const ok = window.confirm(
       `Strike ${money(row.amount)} at ${row.site_name} from the totals?\n\n` +
@@ -148,9 +173,23 @@ export default function Spending({ reloadKey, orderedBy, onToast }) {
 
       {unclaimed > 0 && (
         <div className="claim-banner">
-          📥 {unclaimed} order{unclaimed === 1 ? '' : 's'} came in from the inbox and
-          {unclaimed === 1 ? " doesn't" : " don't"} have a name yet. Tap{' '}
-          <strong>that was me</strong> on yours.
+          <div>
+            📥 {unclaimed} order{unclaimed === 1 ? '' : 's'} came in from the inbox that the
+            portal couldn&apos;t match to anyone. Tap <strong>that was me</strong> on yours, or
+            paste an order number:
+          </div>
+          <div className="claim-by-number">
+            <input
+              type="text"
+              placeholder="Order number"
+              value={orderNumber}
+              onChange={(e) => setOrderNumber(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && claimByNumber()}
+            />
+            <button className="claim-btn" disabled={claiming} onClick={claimByNumber}>
+              {claiming ? '…' : "It's mine"}
+            </button>
+          </div>
         </div>
       )}
 

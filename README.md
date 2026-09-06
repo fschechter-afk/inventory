@@ -66,9 +66,22 @@ Apps Script reads that inbox every fifteen minutes and files each order in the
 portal: store, total, date, order number. Setup is a one-time ten minutes and
 is written up in [`automation/`](automation/README.md).
 
-A shared mailbox doesn't say *who* ordered, so imports show up marked *no name
-yet* with an `auto` tag. Whoever placed it taps **that was me** and it's
-theirs — and a purchase that already has a name can't be overwritten. One
+A shared mailbox doesn't say *who* ordered — but the portal does. Tapping a
+store tile records that you're heading there, and an arriving order looks for
+its owner in three places before giving up:
+
+1. **A purchase you already logged by hand** — same store, same amount, within
+   three days. It attaches to that row rather than adding a second, so logging
+   something manually never double-counts it.
+2. **Whoever tapped that store recently.** Usually nobody has to do anything:
+   you tap Sam's Club, order, and the confirmation arrives already in your
+   name. If two people set off for the same store, it stays unassigned rather
+   than crediting the wrong one.
+3. **Failing both**, it arrives marked *no name yet* with an `auto` tag, and is
+   claimed with one tap of **that was me** — or by pasting the order number
+   into the box in the Spending tab, which finds it for you.
+
+A purchase that already has a name can't be overwritten by any of these. One
 order makes one row however many emails a store sends about it, because the
 order number is the key.
 
@@ -132,15 +145,17 @@ Everything lives in the Supabase project `aheiyytqvzxkoowykkgt`
 | `inventory_checks` | One row per submitted check (who, when, video links, low/out counts) |
 | `inventory_check_items` | Per-item status rows for each check (`ok` / `low` / `out`, qty when low) |
 | `order_sites` | The store tiles on the portal: name, url, blurb, emoji, ordering, `active` toggle |
+| `order_intents` | "I'm off to Sam's Club" — recorded when a tile is tapped, so an imported order can find its owner |
 | `purchases` | One row per purchase: who, which store, amount, what for, date, notes, `voided` flag, and `source` (`portal` or `email`) with the `source_ref` that keeps imports from doubling up |
 
 Row Level Security applies to the new tables the same way: the shipped key
 can read both and insert a purchase, and nothing else. It holds no update or
 delete permission at all — the three things that change a row go through
 functions that each allow exactly one change: `void_purchase()` strikes a
-purchase without erasing it, `claim_purchase()` fills in a name only where
-there isn't one, and `import_purchase_from_email()` refuses to insert an
-order it has already seen.
+purchase without erasing it, `claim_purchase()` and
+`claim_purchase_by_order_number()` fill in a name only where there isn't one,
+and `import_purchase_from_email()` refuses to insert an order it has already
+seen.
 
 ### Editing the item list
 
@@ -160,7 +175,7 @@ Supabase Dashboard → Table Editor → `inventory_items`:
 
 The schema and the starting item and store lists are checked in under
 [`supabase/migrations/`](supabase/migrations), so a fresh project can be
-rebuilt by running those six files in the SQL Editor, in order. The seeds
+rebuilt by running those eight files in the SQL Editor, in order. The seeds
 are idempotent — re-running them won't duplicate or overwrite dashboard
 edits. (They're already applied to the project above; the files are there so
 the database can be rebuilt from scratch.)

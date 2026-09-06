@@ -50,10 +50,13 @@ usually within fifteen minutes of the confirmation email arriving.
   produce one purchase. If an email has no order number, the Gmail message id
   is used instead. Re-running the importer over the same mail changes
   nothing.
-- **No name attached.** A shared mailbox doesn't say who placed the order, so
-  imports arrive marked *no name yet*. Whoever ordered taps **that was me**
-  in the Spending tab and it's theirs. Nobody can overwrite a purchase that
-  already has a name.
+- **The name is worked out, not asked for.** An import looks for its owner in
+  three places: a purchase already logged by hand for that store and amount
+  (it attaches to that row instead of adding a second), then whoever tapped
+  that store tile in the portal in the last three days, and only failing both
+  does it arrive marked *no name yet* for someone to claim. Two people who
+  both set off for the same store leaves it unassigned rather than crediting
+  the wrong one. Nobody can overwrite a purchase that already has a name.
 - **Anything it can't read, it leaves alone** — unlabelled, so a later run
   picks it up if the script is improved. It never guesses a total.
 

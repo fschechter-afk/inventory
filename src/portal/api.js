@@ -79,6 +79,29 @@ export async function fetchPurchases({ since = null, limit = 500 } = {}) {
   return data || []
 }
 
+/** Say who is heading off to a store, so the confirmation email that turns up
+ *  later can find its owner without anyone claiming it. Best-effort: a failure
+ *  here costs an automatic attribution, not the purchase. */
+export async function recordOrderIntent({ orderedBy, siteId, siteName }) {
+  const { error } = await supabase.rpc('record_order_intent', {
+    p_ordered_by: orderedBy,
+    p_site_id: siteId || null,
+    p_site_name: siteName,
+  })
+  if (error) throw error
+}
+
+/** Claim an unassigned purchase by its order number, for when the portal
+ *  couldn't work out whose it was. Returns false if nothing matched. */
+export async function claimByOrderNumber(orderNumber, orderedBy) {
+  const { data, error } = await supabase.rpc('claim_purchase_by_order_number', {
+    p_order_number: orderNumber,
+    p_ordered_by: orderedBy,
+  })
+  if (error) throw error
+  return !!data
+}
+
 /** Put a name to an imported purchase. Only fills in an unassigned one, so
  *  claiming can never rewrite somebody else's row. */
 export async function claimPurchase(id, orderedBy) {
