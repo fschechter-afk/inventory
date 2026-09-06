@@ -1,0 +1,17 @@
+| We're on it! Kellogg's Corn Flakes... + 15 items |
+
+| Order date: Tue, Sep 1, 2026 |
+| Order number: #2000152-87275995 |
+| # Thanks for your order, Menachem! |
+| We'll let you know when it's on the way. |
+
+| | | Arrives Tue, Sep 1, 12pm - 2pm |
+| | | 6515 n Albany ave, Chicago, IL, 60645 |
+| | | 16 items See all |
+
+| ## Order total |
+| Includes all fees, taxes and discounts | $40.61 |
+| You saved a total of | $10.24 |
+
+| ## Payment method |
+| | Ending in 1001 | $41.29 |

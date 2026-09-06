@@ -1,0 +1,11 @@
+WebstaurantStore Order Confirmation
+
+Thank you for your order!
+
+Order Number: WS-4471902
+Order Date: 09/02/2026
+
+Subtotal: $412.80
+Shipping: $38.25
+Tax: $0.00
+Total: $451.05

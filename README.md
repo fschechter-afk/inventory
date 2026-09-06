@@ -18,12 +18,11 @@ opens and the purchase gets tracked.
 
 - **Four taps to shop.** Department, store, purpose, go. The department is
   pre-selected from the person's home department.
-- **Nothing is lost when a vendor won't cooperate.** Almost no retailer lets a
-  buyer pull their own order history (see
-  [docs/VENDOR_INTEGRATIONS.md](docs/VENDOR_INTEGRATIONS.md)), so tapping Shop
-  records the trip *before* the vendor opens — who, which budget, what for —
-  and the portal nudges people to fill in the order number, total and receipt
-  afterwards.
+- **Orders record themselves.** Tapping Shop captures who, which budget and
+  what for; the vendor's confirmation email supplies the order number, total
+  and — for most vendors — every line item. The portal matches the two and
+  writes the purchase with no typing at all. See
+  [docs/AUTOMATIC_ORDER_CAPTURE.md](docs/AUTOMATIC_ORDER_CAPTURE.md).
 - **Receipts are a photo, not a project.** The uploader opens the camera, and
   saving a new order stays on the receipt step instead of closing.
 - **Approvals are enforced in the database.** Anything over the limit (default
@@ -38,9 +37,17 @@ opens and the purchase gets tracked.
   enforced by Row Level Security, so an employee's browser genuinely cannot
   fetch someone else's purchases.
 
+- **A running record of every item.** The Items tab rolls every line item up by
+  name: how often it is bought, what it cost last time, and which store has
+  been cheapest for it.
+
 **Setup, roles, approvals, budgets and reports:
 [docs/SHOPPING_PORTAL.md](docs/SHOPPING_PORTAL.md).** Three one-time steps are
 needed before staff can sign in.
+
+**Automatic order capture:
+[docs/AUTOMATIC_ORDER_CAPTURE.md](docs/AUTOMATIC_ORDER_CAPTURE.md)** — what each
+vendor's email actually contains, and how to switch the pipeline on.
 
 ---
 
