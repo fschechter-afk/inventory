@@ -30,6 +30,9 @@ export default function LogPurchase({
   const [purchasedOn, setPurchasedOn] = useState(() => prefill?.purchasedOn || today)
   const [notes, setNotes] = useState(() => (prefill?.orderNumber ? `Order ${prefill.orderNumber}` : ''))
   const [error, setError] = useState('')
+  // Stores whose confirmations are imported don't need logging by hand; this
+  // opens the form anyway for the odd order that won't be emailed.
+  const [logAnyway, setLogAnyway] = useState(false)
 
   // Reading the receipt instead of retyping it
   const [pasteOpen, setPasteOpen] = useState(false)
@@ -41,6 +44,7 @@ export default function LogPurchase({
 
   const chosen = sites.find((s) => s.id === siteId)
   const siteName = chosen ? chosen.name : otherName.trim()
+  const selfLogging = returning && !logAnyway && !!chosen?.auto_import
 
   /** Put whatever the parser found into the form. Nothing is saved until the
    *  person looks at it and taps save. */
@@ -114,6 +118,35 @@ export default function LogPurchase({
       notes: notes.trim(),
       purchasedOn,
     })
+  }
+
+  if (selfLogging) {
+    return (
+      <div className="screen overlay">
+        <div className="start-card">
+          <h1>Back from {defaultSite.siteName}?</h1>
+          <div className="start-sub">Nothing to do — this one logs itself.</div>
+          <div className="self-log">
+            <p>
+              {defaultSite.siteName} sends a confirmation email to the school
+              inbox, and the portal reads it. Your order will appear in{' '}
+              <strong>Spending</strong> within about fifteen minutes, tagged{' '}
+              <em>auto</em>.
+            </p>
+            <p>
+              When it does, tap <strong>that was me</strong> on it so it counts
+              as yours.
+            </p>
+          </div>
+          <button className="submit-btn" onClick={onCancel}>
+            Got it
+          </button>
+          <button className="back-link" onClick={() => setLogAnyway(true)}>
+            Log it by hand anyway
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -242,6 +275,13 @@ export default function LogPurchase({
           onChange={(e) => setNotes(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && save()}
         />
+
+        {logAnyway && (
+          <div className="conn-status">
+            Fine to do — if the confirmation email turns up later, it'll attach
+            itself to this instead of adding a second row.
+          </div>
+        )}
 
         {error && <div className="conn-status fail">{error}</div>}
 

@@ -20,7 +20,10 @@ export default function SiteGrid({ categories, onOpen, onLog }) {
                   </span>
                   <span className="site-name">{site.name}</span>
                   {site.blurb && <span className="site-blurb">{site.blurb}</span>}
-                  <span className="site-action">{inStore ? 'Log a receipt' : 'Open store →'}</span>
+                  <span className="site-action">
+                    {inStore ? 'Log a receipt' : 'Open store →'}
+                    {site.auto_import && <span className="site-auto">logs itself</span>}
+                  </span>
                 </button>
               )
             })}

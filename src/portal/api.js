@@ -8,7 +8,7 @@ export async function fetchSites() {
   try {
     const { data, error } = await supabase
       .from('order_sites')
-      .select('id, name, url, blurb, emoji, kind, category, category_order, sort_order')
+      .select('id, name, url, blurb, emoji, kind, auto_import, category, category_order, sort_order')
       .eq('active', true)
       .order('category_order')
       .order('sort_order')

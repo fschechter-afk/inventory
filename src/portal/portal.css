@@ -496,3 +496,32 @@ textarea.paste-area:focus {
   color: var(--plum);
   font-weight: 600;
 }
+
+/* Stores whose orders arrive from the inbox on their own */
+.site-auto {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: #eadff0;
+  color: var(--plum);
+  font-size: 0.62rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.self-log {
+  text-align: left;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--ok-bg);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+}
+.self-log p {
+  margin: 0 0 10px;
+}
+.self-log p:last-child {
+  margin-bottom: 0;
+}
