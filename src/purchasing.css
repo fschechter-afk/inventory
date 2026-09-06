@@ -517,3 +517,16 @@
 
 .pp-up { color: var(--out); font-weight: 600; }
 .pp-down { color: var(--ok); font-weight: 600; }
+
+/* --- receipt-first capture ----------------------------------------------- */
+
+.pp-upload.primary {
+  border-color: var(--gold);
+  border-width: 2px;
+  background: #fdf8e8;
+  color: var(--plum);
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 26px 12px;
+}
+.pp-upload.busy { opacity: 0.65; cursor: progress; }

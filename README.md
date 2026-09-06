@@ -16,15 +16,17 @@ One link every staff member starts from when they buy something for the school.
 Choose a department, pick a store, say what it's for, tap **Shop** — the vendor
 opens and the purchase gets tracked.
 
-- **Four taps to shop.** Department, store, purpose, go. The department is
-  pre-selected from the person's home department.
+- **One tap to shop.** The department is already selected from the person's
+  home department, so tapping a store is the whole interaction — no purpose to
+  type, no estimate, no confirm step.
 - **Orders record themselves.** Tapping Shop captures who, which budget and
   what for; the vendor's confirmation email supplies the order number, total
   and — for most vendors — every line item. The portal matches the two and
   writes the purchase with no typing at all. See
   [docs/AUTOMATIC_ORDER_CAPTURE.md](docs/AUTOMATIC_ORDER_CAPTURE.md).
-- **Receipts are a photo, not a project.** The uploader opens the camera, and
-  saving a new order stays on the receipt step instead of closing.
+- **A receipt is a photo, and nothing else.** The camera opens straight away,
+  and the order number, date, every line item, tax and total are read off the
+  picture. Typed fields are hidden behind "No receipt? Enter it by hand".
 - **Approvals are enforced in the database.** Anything over the limit (default
   $250, adjustable per person) waits for a department manager. An employee
   cannot approve their own purchase.

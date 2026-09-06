@@ -103,19 +103,33 @@ default.
 - add a Gmail filter on a staff member's account that auto-forwards order
   confirmations there.
 
-## Where receipts still matter
+## The receipt photo, read automatically
 
-Two gaps email cannot close:
+Email cannot close two gaps: **Walmart grocery** (the order arrives, the items
+do not) and **in-store purchases** at Restaurant Depot, Costco and Sam's Club,
+which send no email at all. The receipt has every line item on it in both
+cases, so the portal reads the photo.
 
-- **Walmart grocery and similar** — the order arrives, the items do not.
-- **In-store purchases** — Restaurant Depot, Costco and Sam's Club send no
-  email at all; the register receipt is the only record.
+Uploading a receipt calls the `extract-receipt` function, which sends the image
+to Claude and gets back the merchant, order number, date, every line item with
+quantity and unit price, subtotal, tax, total and payment method — then writes
+them onto the purchase. The staff member's whole contribution is the photo.
 
-The receipt photo has every line item on it in both cases, so running
-extraction over receipt images is the remaining piece of full item coverage —
-and the only path that works for the cash-and-carry vendors. The schema is
-ready for it: `purchase_orders.source` already distinguishes `portal` /
-`email` / `api` / `import`, and receipts are already attached to purchases.
+Three rules keep it honest:
+
+- **It only fills blanks.** A value a person typed always wins, and re-running
+  extraction can never quietly rewrite a corrected total. Line items are
+  written only when the purchase has none.
+- **It never guesses.** The prompt says to return null for anything not
+  printed, and the result is coerced and validated before it reaches the
+  database — malformed items are dropped, and a result that read nothing at all
+  is discarded rather than written as an empty purchase.
+- **It says when it is unsure.** A `low` confidence reading tells the staff
+  member to check the total rather than silently accepting it.
+
+To switch it on, set `ANTHROPIC_API_KEY` as a secret on the `extract-receipt`
+function. Without it the function returns 503, the app quietly falls back to
+the manual fields, and nothing breaks.
 
 ## Testing the parsers
 

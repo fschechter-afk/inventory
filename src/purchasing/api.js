@@ -1,4 +1,5 @@
 import { supabase } from '../supabase.js'
+import { SUPABASE_KEY, SUPABASE_URL } from '../config.js'
 
 // Every query here runs under the caller's own Row Level Security policies, so
 // "what an employee can see" is enforced by the database, not by this file.
@@ -276,6 +277,29 @@ export async function uploadReceipt(purchaseId, file, uploadedBy) {
     .select()
     .single()
     .then(unwrap)
+}
+
+/** Read the receipt photo and fill the purchase in from it. Returns null when
+ *  extraction is not configured on this project, which the caller treats as
+ *  "keep the manual fields" rather than an error. */
+export async function extractReceipt(receiptId) {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) throw new Error('Not signed in')
+
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/extract-receipt`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify({ receiptId }),
+  })
+
+  const result = await response.json().catch(() => ({}))
+  if (response.status === 503) return null // extraction not switched on
+  if (!response.ok) throw new Error(result.error || 'Could not read the receipt')
+  return result
 }
 
 /** The bucket is private, so viewing needs a short-lived signed URL. */

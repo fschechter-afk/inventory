@@ -1,28 +1,26 @@
 import { useEffect, useMemo, useState } from 'react'
-import {
-  dismissSession,
-  fetchOpenSessions,
-  startShoppingSession,
-} from '../api.js'
-import { money, relativeTime, toNumber } from '../format.js'
-import { Field, Loading, ErrorNote, Bar } from '../ui.jsx'
+import { dismissSession, fetchOpenSessions, startShoppingSession } from '../api.js'
+import { money, relativeTime } from '../format.js'
+import { Bar, ErrorNote, Loading } from '../ui.jsx'
 
-const CUSTOM_VENDOR = { id: null, name: 'Other / custom vendor', emoji: '🏬', category: 'Other' }
+const CUSTOM_VENDOR = { id: null, name: 'Somewhere else', emoji: '🏬', category: 'Other' }
 
-/** The whole point of the portal: department → store → purpose → Shop.
- *  Vendors do not report purchases back to us, so tapping Shop records a
- *  shopping session — who went where, for which budget, and why — and the
- *  order details are filled in on the way back. */
+/** Department, store, go.
+ *
+ *  Everything the portal used to ask for here — a purpose, an estimate, a
+ *  Shop button to confirm — is gone. The department comes pre-selected from
+ *  the staff member's home department, so the common case is one tap: the
+ *  store. Anything else the record needs arrives from the vendor's email or
+ *  off the receipt photo. */
 export default function Shop({ me, departments, vendors, settings, budgets, onRecord, onToast }) {
-  const [departmentId, setDepartmentId] = useState(me.home_department_id || '')
-  const [vendor, setVendor] = useState(null)
-  const [customVendor, setCustomVendor] = useState({ name: '', url: '' })
-  const [purpose, setPurpose] = useState('')
-  const [estimate, setEstimate] = useState('')
+  const [departmentId, setDepartmentId] = useState(
+    me.home_department_id || departments[0]?.id || ''
+  )
   const [openSessions, setOpenSessions] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [busy, setBusy] = useState(false)
+  const [starting, setStarting] = useState(null)
+  const [custom, setCustom] = useState(null)
 
   useEffect(() => {
     fetchOpenSessions(me.id)
@@ -34,58 +32,49 @@ export default function Shop({ me, departments, vendors, settings, budgets, onRe
   const vendorGroups = useMemo(() => {
     const groups = []
     const byName = new Map()
-    for (const v of vendors) {
-      let group = byName.get(v.category)
+    for (const vendor of vendors) {
+      let group = byName.get(vendor.category)
       if (!group) {
-        group = { name: v.category, vendors: [] }
-        byName.set(v.category, group)
+        group = { name: vendor.category, vendors: [] }
+        byName.set(vendor.category, group)
         groups.push(group)
       }
-      group.vendors.push(v)
+      group.vendors.push(vendor)
     }
-    groups.push({ name: 'Something else', vendors: [CUSTOM_VENDOR] })
+    groups.push({ name: 'Not listed', vendors: [CUSTOM_VENDOR] })
     return groups
   }, [vendors])
 
   const department = departments.find((d) => d.id === departmentId)
-  const isCustom = vendor === CUSTOM_VENDOR
-  const vendorName = isCustom ? customVendor.name.trim() : vendor?.name
-  const limit = me.auto_approve_limit ?? settings?.approval_threshold ?? 0
-  const estimateValue = toNumber(estimate)
-  const needsApproval = estimateValue != null && estimateValue > limit
   const budget = budgets?.find((b) => b.department_id === departmentId)
+  const warnPct = settings?.budget_warn_pct ?? 80
 
-  const ready = departmentId && vendorName && purpose.trim().length > 1
-
-  async function go() {
-    setBusy(true)
+  /** One tap: record the trip and open the store. The vendor tab opens from
+   *  inside the click handler so the browser still counts it as user-initiated
+   *  and does not block the popup. */
+  async function go(vendor, customName) {
+    const name = customName || vendor.name
+    setStarting(name)
     setError(null)
+
+    const tab = vendor.url ? window.open('', '_blank', 'noopener,noreferrer') : null
     try {
       const session = await startShoppingSession({
         staff_id: me.id,
         department_id: departmentId,
-        vendor_id: isCustom ? null : vendor.id,
-        vendor_name: vendorName,
-        purpose: purpose.trim(),
-        estimated_total: estimateValue,
+        vendor_id: vendor.id,
+        vendor_name: name,
+        purpose: null,
       })
-
-      if (needsApproval) {
-        onRecord({ session, vendor, requestApproval: true, estimate: estimateValue })
-        return
-      }
-
-      const url = isCustom ? customVendor.url.trim() : vendor.url
-      if (url) window.open(url, '_blank', 'noopener,noreferrer')
+      if (tab && vendor.url) tab.location = vendor.url
       setOpenSessions((prev) => [session, ...prev])
-      setPurpose('')
-      setEstimate('')
-      setVendor(null)
-      onToast(url ? `Shopping at ${vendorName} — record the order when you're done` : 'Trip started')
+      setCustom(null)
+      onToast(`${name} · ${department?.name} — photograph the receipt when you're done`)
     } catch (e) {
+      if (tab) tab.close()
       setError(e)
     } finally {
-      setBusy(false)
+      setStarting(null)
     }
   }
 
@@ -106,23 +95,21 @@ export default function Shop({ me, departments, vendors, settings, budgets, onRe
 
       {openSessions.length > 0 && (
         <div className="pp-card" style={{ borderTop: '3px solid var(--gold)' }}>
-          <h2>Finish recording</h2>
+          <h2>Add the receipt</h2>
           <p className="pp-muted" style={{ marginTop: -4, marginBottom: 12 }}>
-            You started these trips but haven&apos;t recorded what you bought.
+            Snap a photo and the portal reads the rest off it.
           </p>
-          {openSessions.map((s) => (
-            <div key={s.id} className="pp-spread" style={{ marginBottom: 10 }}>
+          {openSessions.map((session) => (
+            <div key={session.id} className="pp-spread" style={{ marginBottom: 10 }}>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>{s.vendor_name}</div>
-                <div className="pp-muted">
-                  {s.purpose} · {relativeTime(s.opened_at)}
-                </div>
+                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{session.vendor_name}</div>
+                <div className="pp-muted">{relativeTime(session.opened_at)}</div>
               </div>
               <div className="pp-row">
-                <button className="pp-btn small" onClick={() => onRecord({ session: s })}>
-                  Record
+                <button className="pp-btn small" onClick={() => onRecord({ session })}>
+                  📷 Receipt
                 </button>
-                <button className="pp-link" onClick={() => dismiss(s)}>
+                <button className="pp-link" onClick={() => dismiss(session)}>
                   Didn&apos;t buy
                 </button>
               </div>
@@ -132,9 +119,12 @@ export default function Shop({ me, departments, vendors, settings, budgets, onRe
       )}
 
       <div className="pp-card">
-        <h2>
-          <span className="pp-step-num">1</span>Who is this for?
-        </h2>
+        <div className="pp-spread" style={{ marginBottom: 10 }}>
+          <h2 style={{ margin: 0 }}>Paying from</h2>
+          {budget && (
+            <span className="pp-muted">{money(budget.remaining)} left this {budget.period.replace('ly', '')}</span>
+          )}
+        </div>
         <div className="pp-chips">
           {departments.map((d) => (
             <button
@@ -147,124 +137,77 @@ export default function Shop({ me, departments, vendors, settings, budgets, onRe
             </button>
           ))}
         </div>
-        {budget && (
-          <div style={{ marginTop: 14 }}>
+        {budget && budget.pct >= warnPct && (
+          <div style={{ marginTop: 12 }}>
             <Bar
-              label={`${budget.department_name} budget, this ${budget.period.replace('ly', '')}`}
+              label={budget.department_name}
               value={Number(budget.spent)}
               max={Number(budget.amount)}
               caption={`${money(budget.spent)} of ${money(budget.amount)}`}
-              tone={budget.pct >= 100 ? 'over' : budget.pct >= (settings?.budget_warn_pct ?? 80) ? 'warn' : 'ok'}
+              tone={budget.pct >= 100 ? 'over' : 'warn'}
             />
-            {budget.pct >= 100 ? (
-              <div className="pp-notice">
-                This department is over budget by {money(Number(budget.spent) - Number(budget.amount))}.
-                Check with an administrator before buying more.
-              </div>
-            ) : budget.pct >= (settings?.budget_warn_pct ?? 80) ? (
-              <div className="pp-notice">
-                Only {money(budget.remaining)} left in this budget.
-              </div>
-            ) : null}
+            <div className="pp-notice">
+              {budget.pct >= 100
+                ? `Over budget by ${money(Number(budget.spent) - Number(budget.amount))}. Check with an administrator first.`
+                : `Only ${money(budget.remaining)} left in this budget.`}
+            </div>
           </div>
         )}
       </div>
 
       <div className="pp-card">
-        <h2>
-          <span className="pp-step-num">2</span>Where are you shopping?
-        </h2>
+        <h2>Tap where you&apos;re shopping</h2>
         {vendorGroups.map((group) => (
           <div key={group.name} className="pp-vendor-group">
             <h3>{group.name}</h3>
             <div className="pp-vendor-grid">
-              {group.vendors.map((v) => (
+              {group.vendors.map((vendor) => (
                 <button
-                  key={v.id || v.name}
-                  className={`pp-vendor ${vendor === v ? 'selected' : ''}`}
-                  onClick={() => setVendor(v)}
+                  key={vendor.id || vendor.name}
+                  className={`pp-vendor ${starting === vendor.name ? 'selected' : ''}`}
+                  disabled={!!starting}
+                  onClick={() =>
+                    vendor === CUSTOM_VENDOR ? setCustom({ name: '' }) : go(vendor)
+                  }
                 >
-                  <span className="pp-vendor-emoji">{v.emoji || '🛒'}</span>
-                  <span className="pp-vendor-name">{v.name}</span>
+                  <span className="pp-vendor-emoji">{vendor.emoji || '🛒'}</span>
+                  <span className="pp-vendor-name">{vendor.name}</span>
                 </button>
               ))}
             </div>
           </div>
         ))}
 
-        {isCustom && (
-          <div style={{ marginTop: 14 }}>
-            <Field label="Store name">
+        {custom && (
+          <div style={{ marginTop: 16 }}>
+            <span className="pp-field-label">Where are you shopping?</span>
+            <div className="pp-row">
               <input
                 className="pp-input"
-                value={customVendor.name}
-                onChange={(e) => setCustomVendor({ ...customVendor, name: e.target.value })}
+                value={custom.name}
+                autoFocus
                 placeholder="Ace Hardware on Devon"
+                onChange={(e) => setCustom({ name: e.target.value })}
+                onKeyDown={(e) =>
+                  e.key === 'Enter' &&
+                  custom.name.trim() &&
+                  go(CUSTOM_VENDOR, custom.name.trim())
+                }
               />
-            </Field>
-            <Field label="Website (optional)" hint="Leave blank for an in-person purchase.">
-              <input
-                className="pp-input"
-                type="url"
-                value={customVendor.url}
-                onChange={(e) => setCustomVendor({ ...customVendor, url: e.target.value })}
-                placeholder="https://"
-              />
-            </Field>
+              <button
+                className="pp-btn small"
+                disabled={!custom.name.trim() || !!starting}
+                onClick={() => go(CUSTOM_VENDOR, custom.name.trim())}
+              >
+                Go
+              </button>
+            </div>
           </div>
         )}
 
-        {vendor?.account_hint && (
-          <div className="pp-notice info" style={{ marginTop: 12 }}>
-            {vendor.account_hint}
-          </div>
-        )}
-      </div>
-
-      <div className="pp-card">
-        <h2>
-          <span className="pp-step-num">3</span>What&apos;s it for?
-        </h2>
-        <Field label="Purpose">
-          <input
-            className="pp-input"
-            value={purpose}
-            onChange={(e) => setPurpose(e.target.value)}
-            placeholder="Shabbos food for the dorm"
-          />
-        </Field>
-        <Field
-          label="About how much? (optional)"
-          hint={`Purchases over ${money(limit)} need approval before you shop.`}
-        >
-          <input
-            className="pp-input"
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            min="0"
-            value={estimate}
-            onChange={(e) => setEstimate(e.target.value)}
-            placeholder="0.00"
-          />
-        </Field>
-
-        {needsApproval && (
-          <div className="pp-notice">
-            {money(estimateValue)} is over your {money(limit)} limit, so this goes to
-            {department ? ` the ${department.name} manager` : ' a manager'} for approval first.
-          </div>
-        )}
-
-        <button className="pp-btn gold" disabled={!ready || busy} onClick={go}>
-          {busy
-            ? 'One moment…'
-            : needsApproval
-              ? 'Request approval'
-              : vendorName
-                ? `Shop at ${vendorName} →`
-                : 'Shop →'}
-        </button>
+        <p className="pp-muted" style={{ marginTop: 14, marginBottom: 0 }}>
+          Tapping a store opens it and starts tracking. Nothing else to fill in.
+        </p>
       </div>
     </>
   )
