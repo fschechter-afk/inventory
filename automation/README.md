@@ -42,9 +42,16 @@ usually within fifteen minutes of the confirmation email arriving.
 - **Only the four online stores** listed at the top of the script: Amazon,
   Walmart, Sam's Club, WebstaurantStore. Add another by adding a line to
   `STORES` *and* a row in the portal's `order_sites` table.
-- **Only confirmations.** Shipping notices, delivery updates, cancellations,
+- **Only confirmations become orders.** Delivery updates, cancellations,
   refunds, review requests and marketing mail are filtered out — they quote
   the same total and would otherwise be counted twice.
+- **Shipping notices move an order along** rather than creating one. A second
+  pass matches "your order has shipped" to the order it belongs to by order
+  number and marks it *Coming* in the Receiving tab.
+- **The expected delivery date comes along** when the store gives one
+  ("Arriving Thursday, September 10", "Estimated delivery 09/04"), including
+  Amazon's bare weekday, resolved forward from the email's date. It's what
+  Michelle's dashboard groups by.
 - **One row per order, not per email.** The order number is the key, so a
   confirmation and the three "your package shipped" emails that follow it
   produce one purchase. If an email has no order number, the Gmail message id

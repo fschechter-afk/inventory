@@ -10,11 +10,56 @@ const SITES = [
   { id: 's6', name: "Sam's Club", url: 'https://www.samsclub.com/' },
   { id: 's7', name: 'Restaurant Depot', url: 'https://www.restaurantdepot.com/' },
   { id: 's8', name: 'Amazon', url: 'https://www.amazon.com/' },
+  { id: 's11', name: 'Walmart', url: 'https://www.walmart.com/' },
+  { id: 's12', name: 'WebstaurantStore', url: 'https://www.webstaurantstore.com/' },
+  { id: 's13', name: 'Aldi', url: 'https://www.aldi.us/' },
   { id: 's9', name: 'Target', url: 'https://www.target.com/' },
   { id: 's10', name: 'Home Depot', url: 'https://www.homedepot.com/' },
 ]
 
 const CASES = [
+  {
+    name: 'Amazon: order date and a separate "Arriving" date',
+    text: `Amazon.com order confirmation
+Order Placed: September 2, 2026
+Order # 114-000
+Arriving: Thursday, September 10, 2026
+Grand Total: $56.09`,
+    want: { siteName: 'Amazon', amount: 56.09, purchasedOn: '2026-09-02', expectedOn: '2026-09-10' },
+  },
+  {
+    name: 'Amazon: bare weekday resolves forward from the order date',
+    text: `Amazon order placed September 2, 2026
+Order # 114-001
+Arriving Thursday
+Order Total: $22.00`,
+    // 2 Sep 2026 is a Wednesday, so Thursday is the 3rd
+    want: { purchasedOn: '2026-09-02', expectedOn: '2026-09-03' },
+  },
+  {
+    name: 'Walmart: estimated delivery',
+    text: `Walmart
+Thanks for your order! Order # 200-1
+Order date 09/01/2026
+Estimated delivery: 09/04/2026
+Order total $63.12`,
+    want: { siteName: 'Walmart', purchasedOn: '2026-09-01', expectedOn: '2026-09-04' },
+  },
+  {
+    name: 'no arrival wording at all leaves it blank rather than guessing',
+    text: `Costco
+Order Date 08/28/2026
+Order Total $212.40`,
+    want: { purchasedOn: '2026-08-28', expectedOn: null },
+  },
+  {
+    name: 'arrival date is not mistaken for the order date',
+    text: `Sam's Club
+Order #77
+Arriving Sep 12, 2026
+Order Total: $40.00`,
+    want: { expectedOn: '2026-09-12' },
+  },
   {
     name: 'Amazon confirmation',
     text: `From: "Amazon.com" <auto-confirm@amazon.com>

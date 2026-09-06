@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { todayISO } from '../format.js'
 import { parseReceipt } from '../receipt.js'
+import { LOCATIONS } from './WhereTo.jsx'
 
 const SPENT_ON = ['Food', 'Supplies', 'Kitchen', 'Other']
 const MAX_AMOUNT = 100000 // matches the check constraint on the table
@@ -29,6 +30,10 @@ export default function LogPurchase({
   const [spentOn, setSpentOn] = useState('Food')
   const [purchasedOn, setPurchasedOn] = useState(() => prefill?.purchasedOn || today)
   const [notes, setNotes] = useState(() => (prefill?.orderNumber ? `Order ${prefill.orderNumber}` : ''))
+  const [location, setLocation] = useState(() => defaultSite?.deliveryLocation || '')
+  const [expectedOn, setExpectedOn] = useState(() => prefill?.expectedOn || '')
+  // Item lines are optional — they're what makes "ordered 15, got 12" checkable.
+  const [items, setItems] = useState([{ name: '', qty: '', unit: '' }])
   const [error, setError] = useState('')
   // Stores whose confirmations are imported don't need logging by hand; this
   // opens the form anyway for the odd order that won't be emailed.
@@ -63,6 +68,7 @@ export default function LogPurchase({
     if (result.amount != null) setAmount(result.amount.toFixed(2))
     if (result.purchasedOn) setPurchasedOn(result.purchasedOn)
     if (result.orderNumber && !notes.trim()) setNotes(`Order ${result.orderNumber}`)
+    if (result.expectedOn) setExpectedOn(result.expectedOn)
     setReadSummary(result.found.join(' · '))
     setPasteNote('')
     setError('')
@@ -117,6 +123,15 @@ export default function LogPurchase({
       spentOn,
       notes: notes.trim(),
       purchasedOn,
+      deliveryLocation: location || null,
+      expectedOn: expectedOn || null,
+      items: items
+        .filter((i) => i.name.trim())
+        .map((i) => ({
+          name: i.name.trim(),
+          qty_ordered: i.qty === '' ? null : Number.parseFloat(i.qty),
+          unit: i.unit.trim() || null,
+        })),
     })
   }
 
@@ -253,8 +268,81 @@ export default function LogPurchase({
           ))}
         </div>
 
+        <label className="field-label">Delivering to</label>
+        <div className="chip-row">
+          {LOCATIONS.map((place) => (
+            <button
+              key={place}
+              className={`choice-chip ${location === place ? 'active' : ''}`}
+              onClick={() => setLocation(location === place ? '' : place)}
+            >
+              {place}
+            </button>
+          ))}
+        </div>
+
+        <label className="field-label" htmlFor="expectedOn">
+          Expected delivery (optional)
+        </label>
+        <input
+          id="expectedOn"
+          type="date"
+          value={expectedOn}
+          onChange={(e) => setExpectedOn(e.target.value)}
+        />
+
+        <label className="field-label">What&apos;s on it (optional)</label>
+        <div className="item-lines">
+          {items.map((line, i) => (
+            <div className="item-line" key={i}>
+              <input
+                type="text"
+                className="item-name"
+                placeholder="Item"
+                value={line.name}
+                onChange={(e) => {
+                  const next = items.slice()
+                  next[i] = { ...next[i], name: e.target.value }
+                  // Keep one empty line at the end so adding is just typing.
+                  if (i === items.length - 1 && e.target.value.trim()) {
+                    next.push({ name: '', qty: '', unit: '' })
+                  }
+                  setItems(next)
+                }}
+              />
+              <input
+                type="text"
+                className="item-qty"
+                inputMode="decimal"
+                placeholder="Qty"
+                value={line.qty}
+                onChange={(e) => {
+                  const next = items.slice()
+                  next[i] = { ...next[i], qty: e.target.value }
+                  setItems(next)
+                }}
+              />
+              <input
+                type="text"
+                className="item-unit"
+                placeholder="Unit"
+                value={line.unit}
+                onChange={(e) => {
+                  const next = items.slice()
+                  next[i] = { ...next[i], unit: e.target.value }
+                  setItems(next)
+                }}
+              />
+            </div>
+          ))}
+          <div className="item-hint">
+            Worth filling in for anything countable — it&apos;s what turns &ldquo;15 gallons
+            ordered&rdquo; into something Michelle can check off.
+          </div>
+        </div>
+
         <label className="field-label" htmlFor="purchasedOn">
-          Date
+          Date ordered
         </label>
         <input
           id="purchasedOn"

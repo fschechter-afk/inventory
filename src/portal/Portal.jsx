@@ -8,6 +8,8 @@ import NeedsPanel from './components/NeedsPanel.jsx'
 import SiteGrid from './components/SiteGrid.jsx'
 import LogPurchase from './components/LogPurchase.jsx'
 import Spending from './components/Spending.jsx'
+import Receiving from './components/Receiving.jsx'
+import WhereTo from './components/WhereTo.jsx'
 
 const NAME_KEY = 'portal.orderedBy.v1'
 const TRIP_KEY = 'portal.pendingTrip.v1'
@@ -64,7 +66,9 @@ export default function Portal() {
   const [saving, setSaving] = useState(false)
   const [pending, setPending] = useState(() => outboxCount('purchase'))
   const [reloadKey, setReloadKey] = useState(0)
+  const [openCount, setOpenCount] = useState(0)
   const [sharedText, setSharedText] = useState(readSharedText)
+  const [askingWhere, setAskingWhere] = useState(null) // store tapped, awaiting a location
   const [toast, setToast] = useState('')
   const toastTimer = useRef(null)
 
@@ -144,16 +148,30 @@ export default function Portal() {
   }
 
   function openSite(site) {
+    setAskingWhere(site)
+  }
+
+  function goToStore(site, deliveryLocation) {
+    setAskingWhere(null)
     localStorage.setItem(
       TRIP_KEY,
-      JSON.stringify({ siteId: site.id, siteName: site.name, url: site.url, at: Date.now() })
+      JSON.stringify({
+        siteId: site.id,
+        siteName: site.name,
+        url: site.url,
+        deliveryLocation,
+        at: Date.now(),
+      })
     )
     // Tell the database who's going where, so an imported confirmation can be
-    // credited without anyone claiming it. Never block opening the store on it.
+    // credited and routed without anyone claiming it. Never block the store on it.
     if (site.auto_import) {
-      recordOrderIntent({ orderedBy: name, siteId: site.id, siteName: site.name }).catch((e) =>
-        console.warn('Could not record who is ordering:', e)
-      )
+      recordOrderIntent({
+        orderedBy: name,
+        siteId: site.id,
+        siteName: site.name,
+        deliveryLocation,
+      }).catch((e) => console.warn('Could not record who is ordering:', e))
     }
     window.open(site.url, '_blank', 'noopener,noreferrer')
   }
@@ -227,6 +245,13 @@ export default function Portal() {
             Order
           </button>
           <button
+            className={`tab ${tab === 'receiving' ? 'active' : ''}`}
+            onClick={() => setTab('receiving')}
+          >
+            Receiving
+            {openCount > 0 && <span className="tab-count">{openCount}</span>}
+          </button>
+          <button
             className={`tab ${tab === 'spending' ? 'active' : ''}`}
             onClick={() => setTab('spending')}
           >
@@ -269,8 +294,25 @@ export default function Portal() {
         </main>
       )}
 
+      {tab === 'receiving' && (
+        <Receiving
+          reloadKey={reloadKey}
+          orderedBy={name}
+          onToast={showToast}
+          onOpenCount={setOpenCount}
+        />
+      )}
+
       {tab === 'spending' && (
         <Spending reloadKey={reloadKey} orderedBy={name} onToast={showToast} />
+      )}
+
+      {askingWhere && (
+        <WhereTo
+          site={askingWhere}
+          onPick={(place) => goToStore(askingWhere, place)}
+          onCancel={() => setAskingWhere(null)}
+        />
       )}
 
       {logging && (

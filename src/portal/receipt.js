@@ -26,6 +26,14 @@ const MONTHS = {
 
 const DATE_HINT = /order(ed)?\s*(date|placed|on)?|placed\s+on|purchase[d]?\s+on|date\b/i
 
+// Wording stores use for when it turns up, as opposed to when it was bought.
+const ARRIVAL_HINT =
+  /arriv\w*|estimated\s+deliver\w*|deliver(y|ed)?\s*(date|by|on)|expected\s+deliver\w*|scheduled\s+for|get\s+it\s+by|will\s+be\s+delivered/i
+
+const WEEKDAYS = {
+  sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6,
+}
+
 function pad(n) {
   return String(n).padStart(2, '0')
 }
@@ -107,7 +115,8 @@ function findSite(text, sites) {
   return best ? best.site : null
 }
 
-function findDate(text) {
+/** Every date in the text, with where it appeared. */
+function findDates(text) {
   const found = []
   const push = (y, m, d, index) => {
     const value = iso(y, m, d)
@@ -128,17 +137,55 @@ function findDate(text) {
     const year = Number(m[3])
     push(year < 100 ? 2000 + year : year, Number(m[1]), Number(m[2]), m.index)
   }
+  return found
+}
+
+function findDate(text) {
+  const found = findDates(text)
   if (!found.length) return null
 
-  // Prefer a date introduced by something like "Order placed:".
-  const labelled = found.find((f) => DATE_HINT.test(text.slice(Math.max(0, f.index - 40), f.index)))
-  const chosen = (labelled || found[0]).value
+  // Prefer a date introduced by something like "Order placed:", and never one
+  // that reads as an arrival — that is a different field.
+  const labelled = found.find(
+    (f) =>
+      DATE_HINT.test(text.slice(Math.max(0, f.index - 40), f.index)) &&
+      !ARRIVAL_HINT.test(text.slice(Math.max(0, f.index - 40), f.index))
+  )
+  const plain = found.find((f) => !ARRIVAL_HINT.test(text.slice(Math.max(0, f.index - 60), f.index)))
+  const chosen = (labelled || plain || found[0]).value
 
   // Never return a date in the future: log_purchase() would clamp it anyway,
   // and a wrong year shouldn't sit at the top of the list.
   const now = new Date()
   const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
   return chosen > today ? today : chosen
+}
+
+/** When the order is due. Stores label this plainly ("Arriving Thursday,
+ *  September 10"), and often give only a weekday, which is resolved forward
+ *  from the order date. */
+function findExpectedDate(text, orderedOn) {
+  const base = orderedOn ? new Date(`${orderedOn}T12:00:00`) : new Date()
+
+  // A full date sitting next to arrival wording.
+  const dated = findDates(text).find((f) =>
+    ARRIVAL_HINT.test(text.slice(Math.max(0, f.index - 60), f.index))
+  )
+  if (dated) return dated.value
+
+  // "Arriving Thursday" — the next such weekday on or after the order date.
+  const bare = /(?:arriv\w*|deliver\w*|get\s+it)\s+(?:by\s+|on\s+)?(sun|mon|tue|wed|thu|fri|sat)[a-z]*/i.exec(
+    text
+  )
+  if (bare) {
+    const want = WEEKDAYS[bare[1].toLowerCase()]
+    const d = new Date(base)
+    let step = (want - d.getDay() + 7) % 7
+    if (step === 0) step = 7 // "arriving Thursday" sent on a Thursday means next week
+    d.setDate(d.getDate() + step)
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  }
+  return null
 }
 
 function findOrderNumber(text) {
@@ -157,18 +204,21 @@ export function parseReceipt(text, sites = []) {
   const site = findSite(clean, sites)
   const amount = findTotal(clean)
   const purchasedOn = findDate(clean)
+  const expectedOn = findExpectedDate(clean, purchasedOn)
   const orderNumber = findOrderNumber(clean)
 
   const found = []
   if (site) found.push(site.name)
   if (amount != null) found.push(`$${amount.toFixed(2)}`)
   if (purchasedOn) found.push(purchasedOn)
+  if (expectedOn) found.push(`due ${expectedOn}`)
 
   return {
     siteId: site ? site.id : null,
     siteName: site ? site.name : null,
     amount,
     purchasedOn,
+    expectedOn,
     orderNumber,
     found,
   }

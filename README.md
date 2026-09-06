@@ -105,6 +105,54 @@ form in, and on an installed phone app you can share the email straight into
 the portal from Mail or Gmail. What it read is shown before anything is saved,
 and every field stays editable.
 
+### Receiving — Michelle's tab
+
+Nothing should be able to disappear between being ordered and being put away,
+so every order carries a delivery location and a status through to unpacked.
+
+**When you order**, the portal asks one question before opening the store:
+**Dorm, School or Shul?** That's the whole extra cost of the feature, and it's
+what Michelle checks against when something turns up.
+
+**The Receiving tab** shows everything still owed a delivery or a check,
+wherever it was going, **grouped by the day it's due** — overdue first, then
+today, then ahead, then anything with no date. Issues sit at the top under
+*Needs sorting out*, and the tab carries a count of what's outstanding.
+
+Each order shows what it is, who ordered it, the vendor, where it's going,
+when it's due, the items and quantities, and how far along it is:
+
+    Ordered → Coming → Delivered → Unpacked
+
+**Michelle's four marks** are on every order: *Not yet received*, *Received*,
+*Received & unpacked*, and *Issue*. She can also **send an order to the right
+place** — the location chips on each card set or correct it, for an order
+nobody labelled or one that turned up somewhere else — and change the
+expected date.
+
+**Discrepancies**: tapping *Issue* takes a note ("Ordered 15 gallons of oil,
+only 12 arrived") and, where item lines exist, how much of each actually came.
+A short line is highlighted against what was ordered. Closing an issue keeps
+the note on the record.
+
+**Accountability**: every mark records who made it and when — received by,
+unpacked by, flagged by, and who closed it out. None of it is deleted.
+
+An expected delivery date is read out of the confirmation email where the
+store gives one ("Arriving Thursday, September 10", "Estimated delivery
+09/04"), including Amazon's bare weekday, resolved forward from the order
+date. Shipping notices, which used to be discarded, now move an order along
+to **Coming** instead of being ignored.
+
+Items are optional — an order tracks without them. They're worth filling in
+for anything countable, because they're what turns "15 gallons ordered" into
+something checkable.
+
+> One limit worth knowing: names in the portal are typed, not logged in.
+> "Received by Michelle" means someone using the portal as Michelle marked it.
+> That's the same trust model as the rest of the app, and fine for a dorm — but
+> it isn't an audit trail that would survive someone deliberately lying.
+
 ### Spending
 
 Everything by person, date and amount, with this-month / last-month /
@@ -146,6 +194,7 @@ Everything lives in the Supabase project `aheiyytqvzxkoowykkgt`
 | `inventory_check_items` | Per-item status rows for each check (`ok` / `low` / `out`, qty when low) |
 | `order_sites` | The store tiles on the portal: name, url, blurb, emoji, ordering, `active` toggle |
 | `order_intents` | "I'm off to Sam's Club" — recorded when a tile is tapped, so an imported order can find its owner |
+| `purchase_items` | What was on an order: item, quantity ordered, unit, and quantity actually received |
 | `purchases` | One row per purchase: who, which store, amount, what for, date, notes, `voided` flag, and `source` (`portal` or `email`) with the `source_ref` that keeps imports from doubling up |
 
 Row Level Security applies to the new tables the same way: the shipped key
@@ -154,8 +203,10 @@ delete permission at all — the three things that change a row go through
 functions that each allow exactly one change: `void_purchase()` strikes a
 purchase without erasing it, `claim_purchase()` and
 `claim_purchase_by_order_number()` fill in a name only where there isn't one,
-and `import_purchase_from_email()` refuses to insert an order it has already
-seen.
+`import_purchase_from_email()` refuses to insert an order it has already seen,
+and the receiving functions (`set_delivery_state()`, `resolve_delivery_issue()`,
+`set_delivery_location()`, `set_expected_date()`, `set_received_quantities()`)
+each make one specific change and stamp who made it.
 
 ### Editing the item list
 
@@ -175,7 +226,7 @@ Supabase Dashboard → Table Editor → `inventory_items`:
 
 The schema and the starting item and store lists are checked in under
 [`supabase/migrations/`](supabase/migrations), so a fresh project can be
-rebuilt by running those eight files in the SQL Editor, in order. The seeds
+rebuilt by running those eleven files in the SQL Editor, in order. The seeds
 are idempotent — re-running them won't duplicate or overwrite dashboard
 edits. (They're already applied to the project above; the files are there so
 the database can be rebuilt from scratch.)

@@ -548,3 +548,286 @@ textarea.paste-area:focus {
   padding: 8px 14px;
   font-size: 0.76rem;
 }
+
+/* Where is this going? — asked before the store opens */
+.where-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.where-btn {
+  padding: 20px 6px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  background: #fff;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--plum);
+  cursor: pointer;
+}
+.where-btn:active {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--plum-deep);
+}
+.where-note {
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: var(--muted);
+  text-align: left;
+  margin: 0 0 6px;
+}
+
+/* Item lines on the log form */
+.item-lines {
+  margin-bottom: 18px;
+}
+.item-line {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.item-line input[type='text'] {
+  margin: 0;
+  padding: 9px 10px;
+  font-size: 0.84rem;
+}
+.item-line .item-name { flex: 1 1 auto; min-width: 0; }
+.item-line .item-qty { flex: 0 0 62px; text-align: center; }
+.item-line .item-unit { flex: 0 0 76px; }
+.item-hint {
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* Tab badge for anything waiting on Michelle */
+.tab-count {
+  display: inline-block;
+  margin-left: 5px;
+  min-width: 17px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--out);
+  color: #fff;
+  font-size: 0.68rem;
+  line-height: 17px;
+}
+.tab.active .tab-count {
+  background: var(--plum-deep);
+  color: var(--cream);
+}
+
+/* Receiving dashboard */
+.recv-summary {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.recv-summary > div {
+  flex: 1;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 8px;
+  text-align: center;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.recv-summary strong {
+  display: block;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  color: var(--plum);
+}
+.recv-summary .recv-flagged {
+  border-color: var(--out);
+  background: var(--out-bg);
+}
+.recv-summary .recv-flagged strong { color: var(--out); }
+
+.recv-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: 'Playfair Display', serif;
+  font-size: 0.95rem;
+  color: var(--plum);
+  margin: 18px 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 2px solid var(--gold);
+}
+.recv-heading.alert {
+  color: var(--out);
+  border-bottom-color: var(--out);
+}
+.recv-count {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.recv-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--plum);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+.recv-card.overdue { border-left-color: var(--low); }
+.recv-card.issue { border-left-color: var(--out); background: #fffaf9; }
+
+.recv-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+.recv-store { font-size: 0.92rem; font-weight: 600; color: var(--plum); }
+.recv-amount { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.recv-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+  font-size: 0.73rem;
+  color: var(--muted);
+}
+.recv-place {
+  background: #eadff0;
+  color: var(--plum);
+  border-radius: 5px;
+  padding: 1px 7px;
+  font-weight: 600;
+}
+.recv-place.none {
+  background: var(--low-bg);
+  color: var(--low);
+}
+.recv-due.late { color: var(--out); font-weight: 600; }
+
+.recv-track {
+  display: flex;
+  gap: 4px;
+  margin: 10px 0 2px;
+}
+.recv-step {
+  flex: 1;
+  text-align: center;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #b7ae9d;
+  border-top: 3px solid var(--line);
+  padding-top: 5px;
+}
+.recv-step.done {
+  color: var(--plum);
+  font-weight: 600;
+  border-top-color: var(--gold);
+}
+
+.recv-items {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  font-size: 0.78rem;
+}
+.recv-items li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+}
+.recv-items li.short { color: var(--out); font-weight: 600; }
+.recv-qty { color: var(--muted); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.recv-items li.short .recv-qty { color: var(--out); }
+
+.recv-issue {
+  margin-top: 10px;
+  background: var(--out-bg);
+  border-radius: 8px;
+  padding: 9px 11px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--out);
+}
+.recv-issue strong { color: var(--out); }
+.recv-stamp {
+  margin-top: 6px;
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+.recv-issue .paste-toggle { text-align: left; color: var(--out); }
+
+.recv-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+.recv-btn {
+  flex: 1 1 auto;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1.5px solid var(--line);
+  background: #fff;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.recv-btn.primary { border-color: var(--plum); color: var(--plum); }
+.recv-btn.warn { border-color: var(--out); color: var(--out); flex: 0 0 auto; }
+
+.recv-fix {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-top: 9px;
+  padding-top: 9px;
+  border-top: 1px dashed var(--line);
+}
+.recv-fix-label { font-size: 0.7rem; color: var(--muted); }
+.choice-chip.small { padding: 4px 10px; font-size: 0.7rem; }
+input[type='date'].recv-date {
+  margin: 0 0 0 auto;
+  padding: 5px 8px;
+  width: auto;
+  font-size: 0.72rem;
+}
+
+.recv-issue-form {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+.recv-issue-form input[type='text'] { margin-bottom: 10px; padding: 10px; font-size: 0.85rem; }
+.recv-count-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.78rem;
+  padding: 4px 0;
+}
+.recv-count-line em { color: var(--muted); font-style: normal; font-size: 0.72rem; }
+.recv-count-line input[type='text'] {
+  flex: 0 0 66px;
+  margin: 0;
+  padding: 6px;
+  text-align: center;
+  font-size: 0.8rem;
+}
