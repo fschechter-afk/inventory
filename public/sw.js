@@ -1,7 +1,7 @@
 /* Service worker: app-shell caching + offline support.
    Paths are relative so the app works when hosted under a sub-path
    (e.g. GitHub Pages project sites). */
-const CACHE = 'dorm-inventory-v1'
+const CACHE = 'dorm-inventory-v2'
 const SHELL = './'
 
 self.addEventListener('install', (event) => {

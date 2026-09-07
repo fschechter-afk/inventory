@@ -106,6 +106,10 @@ export default function SignIn({ onSignedIn }) {
           Access is by invitation. If sign-up says your account has no access, ask an
           administrator to invite your email address.
         </p>
+
+        <p className="pp-muted" style={{ textAlign: 'center', marginTop: 10, fontSize: '0.7rem' }}>
+          Version {__BUILD_ID__}
+        </p>
       </form>
     </div>
   )

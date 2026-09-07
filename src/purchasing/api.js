@@ -35,28 +35,42 @@ export async function signUp(email, password, fullName) {
 
 export const signOut = () => supabase.auth.signOut()
 
+/** Look departments up by id rather than asking PostgREST to embed them.
+ *  A staff member is connected to departments two ways — the home department
+ *  column, and the many-to-many implied by department_managers — so an embed
+ *  is ambiguous and gets rejected. A plain lookup has no such problem, and
+ *  departments is a short, fully cached table. */
+async function attachHomeDepartments(rows, columns = 'id, name, emoji') {
+  const ids = [...new Set(rows.map((r) => r.home_department_id).filter(Boolean))]
+  if (ids.length === 0) return rows.map((r) => ({ ...r, home_department: null }))
+  const departments = unwrap(await supabase.from('departments').select(columns).in('id', ids))
+  const byId = new Map(departments.map((d) => [d.id, d]))
+  return rows.map((r) => ({ ...r, home_department: byId.get(r.home_department_id) ?? null }))
+}
+
 /** The signed-in person's staff record, or null when they have no portal
  *  access. A Supabase Auth account is not enough — an administrator has to
- *  invite the address first (see pp_accept_staff_invite).
- *
- *  The `!staff_home_department_id_fkey` hint is required: staff reaches
- *  departments two ways — directly via home_department_id, and many-to-many
- *  through department_managers — so PostgREST refuses to guess. */
+ *  invite the address first (see pp_accept_staff_invite). */
 export async function fetchMe() {
   const { data: auth } = await supabase.auth.getUser()
   if (!auth?.user) return null
   const { data, error } = await supabase
     .from('staff')
-    .select('*, home_department:departments!staff_home_department_id_fkey(id, name, emoji)')
+    .select('*')
     .eq('id', auth.user.id)
     .maybeSingle()
   if (error) throw error
   if (!data) return { id: auth.user.id, email: auth.user.email, noAccess: true }
 
-  const managed = unwrap(
-    await supabase.from('department_managers').select('department_id').eq('staff_id', auth.user.id)
-  )
-  return { ...data, managedDepartmentIds: managed.map((m) => m.department_id) }
+  const [[withDepartment], managed] = await Promise.all([
+    attachHomeDepartments([data]),
+    supabase
+      .from('department_managers')
+      .select('department_id')
+      .eq('staff_id', auth.user.id)
+      .then(unwrap),
+  ])
+  return { ...withDepartment, managedDepartmentIds: managed.map((m) => m.department_id) }
 }
 
 export const updateMyName = (fullName) =>
@@ -83,12 +97,11 @@ export const fetchVendors = (includeInactive = false) => {
   return q.then(unwrap)
 }
 
-export const fetchStaff = () =>
-  supabase
-    .from('staff')
-    .select('*, home_department:departments!staff_home_department_id_fkey(id, name)')
-    .order('full_name')
-    .then(unwrap)
+export const fetchStaff = async () =>
+  attachHomeDepartments(
+    await supabase.from('staff').select('*').order('full_name').then(unwrap),
+    'id, name'
+  )
 
 export const fetchBudgetStatus = () => supabase.rpc('pp_budget_status').then(unwrap)
 
@@ -349,13 +362,16 @@ export const inviteStaff = (invite) =>
     .single()
     .then(unwrap)
 
-export const fetchInvites = () =>
-  supabase
-    .from('staff_invites')
-    .select('*, home_department:departments(name)')
-    .is('accepted_at', null)
-    .order('created_at', { ascending: false })
-    .then(unwrap)
+export const fetchInvites = async () =>
+  attachHomeDepartments(
+    await supabase
+      .from('staff_invites')
+      .select('*')
+      .is('accepted_at', null)
+      .order('created_at', { ascending: false })
+      .then(unwrap),
+    'id, name'
+  )
 
 export const revokeInvite = (email) =>
   supabase.from('staff_invites').delete().eq('email', email).then(unwrap)
