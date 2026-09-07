@@ -37,13 +37,17 @@ export const signOut = () => supabase.auth.signOut()
 
 /** The signed-in person's staff record, or null when they have no portal
  *  access. A Supabase Auth account is not enough — an administrator has to
- *  invite the address first (see pp_accept_staff_invite). */
+ *  invite the address first (see pp_accept_staff_invite).
+ *
+ *  The `!staff_home_department_id_fkey` hint is required: staff reaches
+ *  departments two ways — directly via home_department_id, and many-to-many
+ *  through department_managers — so PostgREST refuses to guess. */
 export async function fetchMe() {
   const { data: auth } = await supabase.auth.getUser()
   if (!auth?.user) return null
   const { data, error } = await supabase
     .from('staff')
-    .select('*, home_department:departments(id, name, emoji)')
+    .select('*, home_department:departments!staff_home_department_id_fkey(id, name, emoji)')
     .eq('id', auth.user.id)
     .maybeSingle()
   if (error) throw error
@@ -82,7 +86,7 @@ export const fetchVendors = (includeInactive = false) => {
 export const fetchStaff = () =>
   supabase
     .from('staff')
-    .select('*, home_department:departments(id, name)')
+    .select('*, home_department:departments!staff_home_department_id_fkey(id, name)')
     .order('full_name')
     .then(unwrap)
 
