@@ -438,9 +438,19 @@ function Receipts({ receipts, busy, extraction, online, vendorName, onPick, onRe
   const [error, setError] = useState(null)
 
   async function open(receipt) {
+    // Claim the tab inside the click, before awaiting the signed URL — a
+    // popup opened after an await is no longer user-initiated and gets
+    // blocked. `noopener` is not an option here because it makes
+    // window.open return null; clearing opener by hand is the same
+    // protection.
+    const tab = window.open('', '_blank')
+    if (tab) tab.opener = null
     try {
-      window.open(await receiptUrl(receipt.storage_path), '_blank', 'noopener,noreferrer')
+      const url = await receiptUrl(receipt.storage_path)
+      if (tab) tab.location = url
+      else window.open(url, '_blank', 'noopener,noreferrer')
     } catch (e) {
+      if (tab) tab.close()
       setError(e)
     }
   }

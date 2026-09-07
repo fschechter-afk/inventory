@@ -49,15 +49,21 @@ export default function Shop({ me, departments, vendors, settings, budgets, onRe
   const budget = budgets?.find((b) => b.department_id === departmentId)
   const warnPct = settings?.budget_warn_pct ?? 80
 
-  /** One tap: record the trip and open the store. The vendor tab opens from
-   *  inside the click handler so the browser still counts it as user-initiated
-   *  and does not block the popup. */
+  /** One tap: open the store and record the trip.
+   *
+   *  The store opens first, synchronously, before any await — a tab opened
+   *  after an await is no longer user-initiated and the browser blocks it.
+   *  It also goes straight to the real URL rather than opening blank and
+   *  navigating afterwards: `noopener` makes window.open return null, so
+   *  there is never a handle to navigate, which left staff staring at a
+   *  blank tab. Recording the trip then happens in the background; if it
+   *  fails the person is already shopping, and the error says so. */
   async function go(vendor, customName) {
     const name = customName || vendor.name
     setStarting(name)
     setError(null)
 
-    const tab = vendor.url ? window.open('', '_blank', 'noopener,noreferrer') : null
+    if (vendor.url) window.open(vendor.url, '_blank', 'noopener,noreferrer')
     try {
       const session = await startShoppingSession({
         staff_id: me.id,
@@ -66,7 +72,6 @@ export default function Shop({ me, departments, vendors, settings, budgets, onRe
         vendor_name: name,
         purpose: null,
       })
-      if (tab && vendor.url) tab.location = vendor.url
       setOpenSessions((prev) => [session, ...prev])
       setCustom(null)
       onToast(
@@ -75,7 +80,6 @@ export default function Shop({ me, departments, vendors, settings, budgets, onRe
           : `${name} · ${department?.name} — the confirmation email does the rest`
       )
     } catch (e) {
-      if (tab) tab.close()
       setError(e)
     } finally {
       setStarting(null)
